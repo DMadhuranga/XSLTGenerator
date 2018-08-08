@@ -13,7 +13,7 @@ public class XSLTCreator {
     private static String booleanType = "boolean";
     private static String type = "type";
     private static String itemsType = "items_type";
-    private static int currentLevel = 0;
+    //private static int currentLevel = 0;
     private static ArrayList<InPutNode> inPutNodes;
     private static ArrayList<OutPutNode> outPutNodes;
     private static InPutNode currentInNode;
