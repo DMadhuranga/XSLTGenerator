@@ -16,17 +16,10 @@ public class XSLTExeceute {
             System.out.println(e.getMessage());
         }
 
-        /*
-        try {
-            TransformerFactory factory = TransformerFactory.newInstance();
-            Source xslt = new StreamSource(new File("/home/danushka/Downloads/transform.xslt"));
-            Transformer transformer = factory.newTransformer(xslt);
-            Source text = new StreamSource(new File("/home/danushka/Downloads/input.xml"));
-            transformer.transform(text, new StreamResult(new File("/home/danushka/Downloads/output.xml")));
-        }catch(Exception e){
-            System.out.println(e.getMessage());
-        }
-        */
-
     }
+
+    /*public static void main(String args[]) throws Exception {
+        String[] arglist = {"-o:/home/danushka/Downloads/output1.xml","/home/danushka/Downloads/input1.xml", "/home/danushka/Downloads/output.xml"};
+        //net.sf.saxon.Transform.main(arglist);
+    }*/
 }
