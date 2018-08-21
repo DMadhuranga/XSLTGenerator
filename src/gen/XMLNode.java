@@ -1,3 +1,5 @@
+package gen;
+
 import org.w3c.dom.Node;
 
 public abstract class XMLNode {

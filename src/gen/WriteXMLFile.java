@@ -1,3 +1,5 @@
+package gen;
+
 import org.w3c.dom.Node;
 
 import org.w3c.dom.Document;
@@ -34,7 +36,7 @@ public class WriteXMLFile {
 
     public boolean saveFile(){
         try {
-            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            TransformerFactory transformerFactory = javax.xml.transform.TransformerFactory.newInstance();
             Transformer transformer = transformerFactory.newTransformer();
             DOMSource source = new DOMSource(this.document);
             StreamResult result = new StreamResult(new File(this.filePath));

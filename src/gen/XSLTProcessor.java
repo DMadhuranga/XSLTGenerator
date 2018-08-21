@@ -1,3 +1,5 @@
+package gen;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -103,9 +105,9 @@ public class XSLTProcessor {
             Element currentElement = outputXMLFile.getDocument().createElement(node.getName());
             parentElement.appendChild(currentElement);
             if(node.getInNode().getOutNodes().size()>0){
-                currentElement.setAttribute("InNode",node.getInNode().getOutNodes().get(0));
+                currentElement.setAttribute("gen.InNode",node.getInNode().getOutNodes().get(0));
             }else{
-                currentElement.setAttribute("InNode","Not assigned");
+                currentElement.setAttribute("gen.InNode","Not assigned");
             }
         }else{
             Element currentElement = outputXMLFile.getDocument().createElement(node.getName());

@@ -1,3 +1,5 @@
+package gen;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import org.w3c.dom.Node;
@@ -57,12 +59,12 @@ public class OutPutNode extends XMLNode{
             System.out.println(key+" : "+this.properties.get(key));
         }
         System.out.println("----- End of properties");
-        System.out.println("OutNode : ");
+        System.out.println("gen.OutNode : ");
         if(this.outNode!=null){
             this.outNode.printOutNode();
         }
         System.out.println("----- End of outnode");
-        System.out.println("InNode : ");
+        System.out.println("gen.InNode : ");
         if(this.inNode!=null){
             this.inNode.printInNode();
         }

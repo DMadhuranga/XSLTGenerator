@@ -1,3 +1,5 @@
+package gen;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -19,9 +21,23 @@ public class XSLTCreator {
     private static final String TREE_NODE= "treeNode";
     private static final String OPERATOR_TYPE = "operatorType";
 
+    //arithmatic
+    private static final String ADD = "ADD";
+    private static final String SUBTRACT = "SUBTRACT";
+    private static final String DIVIDE = "DIVIDE";
+    private static final String MULTIPLY = "MULTIPLY";
+    private static final String CEILING = "CEILING";
+    private static final String FLOOR = "FLOOR";
+    private static final String ROUND = "ROUND";
+    private static final String SET_PRECISION = "SET_PRECISION";
+    private static final String ABSOLUTE = "ABSOLUTE";
+
+
     //common
     private static final String CONSTANT = "CONSTANT";
     private static final String GLOBAL_VARIABLE = "GLOBAL_VARIABLE";
+    private static final String PROPERTIES = "PROPERTIES";
+    private static final String COMPARE = "COMPARE";
 
     //conditional
     private static final String IF_ELSE = "IF_ELSE";
@@ -77,14 +93,16 @@ public class XSLTCreator {
     public static void createOutputNode(ReadXMLFile inputxmlFile, WriteXMLFile outputXMLFile,Element rootElement, Element templateElement){
         outPutNodes = new ArrayList<>();
         Node outputNode = inputxmlFile.getDocument().getElementsByTagName(OUTPUT).item(0);
-        /*for(OperatorNode operatorNode:operatorNodes){
-            if(operatorNode.getProperty(OPERATOR_TYPE).equals("CONSTANT")){
+        for(OperatorNode operatorNode:operatorNodes){
+            if(operatorNode.getProperty(OPERATOR_TYPE).equals(GLOBAL_VARIABLE)){
                 Element v = outputXMLFile.getDocument().createElement("xsl:param");
                 v.setAttribute("name","operators."+Integer.toString(operatorNodes.indexOf(operatorNode)));
-                v.setAttribute("select","'"+operatorNode.getProperty("constantValue")+"'");
+                v.setAttribute("global_name",operatorNode.getProperty("name"));
+                String defaultValue = operatorNode.getProperty("defaultValue");
+                v.setAttribute("select","'"+defaultValue+"'");
                 templateElement.appendChild(v);
             }
-        }*/
+        }
         for(int i=0;i<outputNode.getChildNodes().getLength();i++){
             if(outputNode.getChildNodes().item(i).getNodeName().equals(TREE_NODE)){
                 outPutNodes.add(new OutPutNode(outputNode.getChildNodes().item(i),null,""));
@@ -111,6 +129,55 @@ public class XSLTCreator {
         return operatorNodes;
     }
 
+    public static OperatorNode getIfElseOperator(String operatorNodePath){
+        if (isOperator(operatorNodePath)){
+            OperatorNode currentOperatorNode = getOperatorNode(operatorNodePath);
+            for(String path:currentOperatorNode.getLeftContainer().getInNodes()){
+                if(getIfElseOperator(path)!=null){
+                    return getIfElseOperator(path);
+                }
+            }
+            if(currentOperatorNode.getProperty(OPERATOR_TYPE).equals(IF_ELSE)){
+                return currentOperatorNode;
+            }
+        }
+        return null;
+    }
+
+    public static OperatorNode getIfElsePrevOperator(String operatorNodePath){
+        if (isOperator(operatorNodePath)){
+            OperatorNode currentOperatorNode = getOperatorNode(operatorNodePath);
+            for(String path:currentOperatorNode.getLeftContainer().getInNodes()){
+                if(getIfElseOperator(path)!=null){
+                    return currentOperatorNode;
+                }
+            }
+            return currentOperatorNode;
+        }
+        return null;
+    }
+
+    public static void handleIfElseOperator(OutPutNode node,OperatorNode operatorNode, WriteXMLFile outputXMLFile, Element parentElement){
+        Element chooseElement = outputXMLFile.getDocument().createElement("xsl:choose");
+        parentElement.appendChild(chooseElement);
+        Element whenElement = outputXMLFile.getDocument().createElement("xsl:when");
+        whenElement.setAttribute("test",getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0)));
+        Element whenValueElement = outputXMLFile.getDocument().createElement("xsl:value-of");
+        whenValueElement.setAttribute("select",getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1)));
+        whenElement.appendChild(whenValueElement);
+        chooseElement.appendChild(whenElement);
+        Element otherWise = outputXMLFile.getDocument().createElement("xsl:otherwise");
+        Element chooseValueElement = outputXMLFile.getDocument().createElement("xsl:value-of");
+        chooseValueElement.setAttribute("select",getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(2)));
+        otherWise.appendChild(chooseValueElement);
+        chooseElement.appendChild(otherWise);
+    }
+
+    public static String getOperatorValueIfElse(){
+
+        return "";
+    }
+
     public static void traverseOutPutNode(OutPutNode node,WriteXMLFile outputXMLFile, Element rootElement, Element parentElement){
         //System.out.println(currentNode.getAttributes().getNamedItem("schemaDataType").getNodeValue());
         if(node.getProperties().get(TYPE).equals(STRING_TYPE) || node.getProperties().get(TYPE).equals(NUMBER_TYPE) || node.getProperties().get(TYPE).equals(BOOLEAN_TYPE)){
@@ -118,25 +185,13 @@ public class XSLTCreator {
                 Element currentElement = outputXMLFile.getDocument().createElement(node.getName());
                 parentElement.appendChild(currentElement);
                 if(node.getInNode().getOutNodes().size()>0){
-                    if(isOperator(node.getInNode().getOutNodes().get(0)) && getOperatorNode(node.getInNode().getOutNodes().get(0)).getProperty(OPERATOR_TYPE).equals(IF_ELSE)){
-                        OperatorNode operatorNode = getOperatorNode(node.getInNode().getOutNodes().get(0));
-                        Element chooseElement = outputXMLFile.getDocument().createElement("xsl:choose");
-                        currentElement.appendChild(chooseElement);
-                        Element whenElement = outputXMLFile.getDocument().createElement("xsl:when");
-                        whenElement.setAttribute("test",getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0)));
-                        Element whenValueElement = outputXMLFile.getDocument().createElement("xsl:value-of");
-                        whenValueElement.setAttribute("select",getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1)));
-                        whenElement.appendChild(whenValueElement);
-                        chooseElement.appendChild(whenElement);
-                        Element otherWise = outputXMLFile.getDocument().createElement("xsl:otherwise");
-                        Element chooseValueElement = outputXMLFile.getDocument().createElement("xsl:value-of");
-                        chooseValueElement.setAttribute("select",getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(2)));
-                        otherWise.appendChild(chooseValueElement);
-                        chooseElement.appendChild(otherWise);
-                    }else{
+                    OperatorNode ifElseOperatorNode = getIfElseOperator(node.getInNode().getOutNodes().get(0));
+                    if(ifElseOperatorNode==null){
                         Element valueOfElement = outputXMLFile.getDocument().createElement("xsl:value-of");
                         currentElement.appendChild(valueOfElement);
                         valueOfElement.setAttribute("select",getValueFromMapping(node.getInNode().getOutNodes().get(0)));
+                    }else{
+                        handleIfElseOperator(node,ifElseOperatorNode,outputXMLFile,currentElement);
                     }
                 }
             }
@@ -230,7 +285,7 @@ public class XSLTCreator {
             }
         }
         int back = xPathArray.length-1;
-        InPutNode tempNode = node;
+        gen.InPutNode tempNode = node;
         while (back>cnt && tempNode.getParentNode()!=null){
             if(tempNode.getParentNode().getProperty(type).equals(arrayType)){
                 node = tempNode.getParentNode();
@@ -454,9 +509,84 @@ public class XSLTCreator {
                         return "replace(replace("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+",'\\s+$',''),'^\\s+','')";
                     }
                     break;
-                case IF_ELSE:
-                    if(operatorNode.getLeftContainer().getInNodes().size()==3){
-
+                case GLOBAL_VARIABLE:
+                    return "$operators."+Integer.toString(operatorNodes.indexOf(operatorNode))+"";
+                case PROPERTIES:
+                    return "";
+                case COMPARE:
+                    String comparisonOperator = operatorNode.getAttributes().get("comparisonOperator");
+                    if(comparisonOperator==null){
+                        if(operatorNode.getLeftContainer().getInNodes().size()==2){
+                            return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" = "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
+                        }
+                    }else {
+                        switch (comparisonOperator){
+                            case "!=":
+                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" != "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
+                            case "!==":
+                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" != "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
+                            case "===":
+                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" = "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
+                            case ">":
+                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" > "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
+                            case ">=":
+                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" >= "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
+                            case "<":
+                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" < "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
+                            case "<=":
+                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" <= "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
+                        }
+                    }
+                    break;
+                case ADD:
+                    if(operatorNode.getLeftContainer().getInNodes().size()==2){
+                        return "( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" + "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+" )";
+                    }
+                    break;
+                case SUBTRACT:
+                    if(operatorNode.getLeftContainer().getInNodes().size()==2){
+                        return "( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" - "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+" )";
+                    }
+                    break;
+                case DIVIDE:
+                    if(operatorNode.getLeftContainer().getInNodes().size()==2){
+                        return "( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" div "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+" )";
+                    }
+                    break;
+                case MULTIPLY:
+                    if(operatorNode.getLeftContainer().getInNodes().size()==2){
+                        return "( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" * "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+" )";
+                    }
+                    break;
+                case CEILING:
+                    if(operatorNode.getLeftContainer().getInNodes().size()==1){
+                        return "ceiling( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" )";
+                    }
+                    break;
+                case FLOOR:
+                    if(operatorNode.getLeftContainer().getInNodes().size()==1){
+                        return "floor( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" )";
+                    }
+                    break;
+                case ROUND:
+                    if(operatorNode.getLeftContainer().getInNodes().size()==1){
+                        return "round( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" )";
+                    }
+                    break;
+                case ABSOLUTE:
+                    if(operatorNode.getLeftContainer().getInNodes().size()==1){
+                        return "abs( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" )";
+                    }
+                    break;
+                case SET_PRECISION:
+                    String noOfDecimals = operatorNode.getAttributes().get("numberOfDigits");
+                    if(noOfDecimals==null){
+                        if (operatorNode.getLeftContainer().getInNodes().size()==2) {
+                            noOfDecimals = getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
+                            return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" * math:power( number('10'), "+noOfDecimals+" )";
+                        }
+                    }else if(operatorNode.getLeftContainer().getInNodes().size()==1){
+                        return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" * math:power( number('10'), number('"+noOfDecimals+"') )";
                     }
                     break;
             }
@@ -483,17 +613,23 @@ public class XSLTCreator {
             if(currentInNode==null){
                 if(currentNode.getProperty(TYPE).equals(BOOLEAN_TYPE)){
                     return currentNode.getxPath()+" eq 'true' ";
+                }else if(currentNode.getProperty(TYPE).equals(NUMBER_TYPE)){
+                    return "number( "+currentNode.getxPath()+" )";
                 }
                 return currentNode.getxPath();
             }else if(parentFound){
                 if(path.equals("")){
                     if(currentNode.getProperty(TYPE).equals(BOOLEAN_TYPE)){
                         return currentNode.getName()+" eq 'true' ";
+                    }else if(currentNode.getProperty(TYPE).equals(NUMBER_TYPE)){
+                        return "number( "+currentNode.getName()+" )";
                     }
                     return currentNode.getName();
                 }
                 if(currentNode.getProperty(TYPE).equals(BOOLEAN_TYPE)){
                     return path+"/"+currentNode.getName()+" eq 'true' ";
+                }else if(currentNode.getProperty(TYPE).equals(NUMBER_TYPE)){
+                    return "number( "+path+"/"+currentNode.getName()+" )";
                 }
                 return path+"/"+currentNode.getName();
             }else{
@@ -525,6 +661,8 @@ public class XSLTCreator {
                 }
                 if(currentNode.getProperty(TYPE).equals(BOOLEAN_TYPE)){
                     return path+" eq 'true' ";
+                }else if(currentNode.getProperty(TYPE).equals(NUMBER_TYPE)){
+                    return "number( "+path+" )";
                 }
                 return path;
             }
@@ -537,7 +675,7 @@ public class XSLTCreator {
             }else{
                 cPathParts = removeElementAt(cPathParts,0);
             }
-            InPutNode currentNode = inPutNode;
+            gen.InPutNode currentNode = inPutNode;
             String inNodeString = StringUtils.substring(inNode,20);
             while (inNodeString.contains("/@node")){
                 currentNode = currentNode.getChildNodes().get(Integer.parseInt(inNodeString.substring(7,8)));
@@ -591,9 +729,9 @@ public class XSLTCreator {
         return operatorNodes.get(Integer.parseInt(index));
     }
 
-    /*public static InPutNode getInNode(InPutNode inPutNode, ArrayList<OperatorNode> operatorNodes, String inNode){
+    /*public static gen.InPutNode getInNode(gen.InPutNode inPutNode, ArrayList<gen.OperatorNode> operatorNodes, String inNode){
         if(isOperator(inNode)){
-            OperatorNode operatorNode = operatorNodes.get(Integer.parseInt(inNode.substring(13,14)));
+            gen.OperatorNode operatorNode = operatorNodes.get(Integer.parseInt(inNode.substring(13,14)));
             String inNodeString = StringUtils.substring(inNode,20);
             while (inNodeString.contains("/@node")){
                 currentNode = currentNode.getChildNodes().get(Integer.parseInt(inNodeString.substring(7,8)));
@@ -601,7 +739,7 @@ public class XSLTCreator {
             }
             return currentNode;
         }else{
-            InPutNode currentNode = inPutNode.getChildNodes().get(Integer.parseInt(inNode.substring(19,20)));
+            gen.InPutNode currentNode = inPutNode.getChildNodes().get(Integer.parseInt(inNode.substring(19,20)));
             String inNodeString = StringUtils.substring(inNode,20);
             while (inNodeString.contains("/@node")){
                 currentNode = currentNode.getChildNodes().get(Integer.parseInt(inNodeString.substring(7,8)));
