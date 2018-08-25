@@ -129,71 +129,15 @@ public class XSLTCreator {
         return operatorNodes;
     }
 
-    public static OperatorNode getIfElseOperator(String operatorNodePath){
-        if (isOperator(operatorNodePath)){
-            OperatorNode currentOperatorNode = getOperatorNode(operatorNodePath);
-            for(String path:currentOperatorNode.getLeftContainer().getInNodes()){
-                if(getIfElseOperator(path)!=null){
-                    return getIfElseOperator(path);
-                }
-            }
-            if(currentOperatorNode.getProperty(OPERATOR_TYPE).equals(IF_ELSE)){
-                return currentOperatorNode;
-            }
-        }
-        return null;
-    }
-
-    public static OperatorNode getIfElsePrevOperator(String operatorNodePath){
-        if (isOperator(operatorNodePath)){
-            OperatorNode currentOperatorNode = getOperatorNode(operatorNodePath);
-            for(String path:currentOperatorNode.getLeftContainer().getInNodes()){
-                if(getIfElseOperator(path)!=null){
-                    return currentOperatorNode;
-                }
-            }
-            return currentOperatorNode;
-        }
-        return null;
-    }
-
-    public static void handleIfElseOperator(OutPutNode node,OperatorNode operatorNode, WriteXMLFile outputXMLFile, Element parentElement){
-        Element chooseElement = outputXMLFile.getDocument().createElement("xsl:choose");
-        parentElement.appendChild(chooseElement);
-        Element whenElement = outputXMLFile.getDocument().createElement("xsl:when");
-        whenElement.setAttribute("test",getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0)));
-        Element whenValueElement = outputXMLFile.getDocument().createElement("xsl:value-of");
-        whenValueElement.setAttribute("select",getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1)));
-        whenElement.appendChild(whenValueElement);
-        chooseElement.appendChild(whenElement);
-        Element otherWise = outputXMLFile.getDocument().createElement("xsl:otherwise");
-        Element chooseValueElement = outputXMLFile.getDocument().createElement("xsl:value-of");
-        chooseValueElement.setAttribute("select",getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(2)));
-        otherWise.appendChild(chooseValueElement);
-        chooseElement.appendChild(otherWise);
-    }
-
-    public static String getOperatorValueIfElse(){
-
-        return "";
-    }
-
     public static void traverseOutPutNode(OutPutNode node,WriteXMLFile outputXMLFile, Element rootElement, Element parentElement){
         //System.out.println(currentNode.getAttributes().getNamedItem("schemaDataType").getNodeValue());
         if(node.getProperties().get(TYPE).equals(STRING_TYPE) || node.getProperties().get(TYPE).equals(NUMBER_TYPE) || node.getProperties().get(TYPE).equals(BOOLEAN_TYPE)){
             if(node.getInNode().getOutNodes().size()>0){
                 Element currentElement = outputXMLFile.getDocument().createElement(node.getName());
                 parentElement.appendChild(currentElement);
-                if(node.getInNode().getOutNodes().size()>0){
-                    OperatorNode ifElseOperatorNode = getIfElseOperator(node.getInNode().getOutNodes().get(0));
-                    if(ifElseOperatorNode==null){
-                        Element valueOfElement = outputXMLFile.getDocument().createElement("xsl:value-of");
-                        currentElement.appendChild(valueOfElement);
-                        valueOfElement.setAttribute("select",getValueFromMapping(node.getInNode().getOutNodes().get(0)));
-                    }else{
-                        handleIfElseOperator(node,ifElseOperatorNode,outputXMLFile,currentElement);
-                    }
-                }
+                Element valueOfElement = outputXMLFile.getDocument().createElement("xsl:value-of");
+                currentElement.appendChild(valueOfElement);
+                valueOfElement.setAttribute("select",getValueFromMapping(node.getInNode().getOutNodes().get(0)));
             }
         }else if(node.getProperties().get(TYPE).equals(ARRAY_TYPE)){
             InPutNode previousCurrentNode = currentInNode;
@@ -587,6 +531,11 @@ public class XSLTCreator {
                         }
                     }else if(operatorNode.getLeftContainer().getInNodes().size()==1){
                         return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" * math:power( number('10'), number('"+noOfDecimals+"') )";
+                    }
+                    break;
+                case IF_ELSE:
+                    if(operatorNode.getLeftContainer().getInNodes().size()==3){
+                        return "(if("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+")then("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+")else "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(2))+")";
                     }
                     break;
             }
