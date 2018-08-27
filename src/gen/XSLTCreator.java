@@ -31,6 +31,8 @@ public class XSLTCreator {
     private static final String ROUND = "ROUND";
     private static final String SET_PRECISION = "SET_PRECISION";
     private static final String ABSOLUTE = "ABSOLUTE";
+    private static final String MIN = "MIN";
+    private static final String MAX = "MAX";
 
 
     //common
@@ -71,13 +73,27 @@ public class XSLTCreator {
     private static InPutNode currentInNode;
     private static ArrayList<OperatorNode> operatorNodes;
 
+    //XML related constants
+    private static final String NAME = "name";
+
     public static void main(String[] args){
-        ReadXMLFile inputXML = new ReadXMLFile("/home/danushka/workspace/SampleFlowRegistry/NewConfig12.datamapper");
-        WriteXMLFile outputXML = new WriteXMLFile("/home/danushka/Downloads/output.xml");
+        transform("/home/danushka/Downloads/output.xml","/home/danushka/workspace/SampleFlowRegistry/NewConfig12.datamapper");
+    }
+
+    public static void transform(String outputFilePath, String styleSheetFile){
+        ReadXMLFile inputXML = new ReadXMLFile(styleSheetFile);
+        WriteXMLFile outputXML = new WriteXMLFile(outputFilePath);
         Element rootElemenet = outputXML.getDocument().createElement("xsl:stylesheet");
         rootElemenet.setAttribute("xmlns:xsl","http://www.w3.org/1999/XSL/Transform");
+        rootElemenet.setAttribute("xmlns:xs","http://www.w3.org/2001/XMLSchema");
+        rootElemenet.setAttribute("version","2.0");
+        rootElemenet.setAttribute("xmlns:own","http://whatever");
         outputXML.getDocument().appendChild(rootElemenet);
-        rootElemenet.setAttribute("version","1.0");
+
+        //Setting up setPrecisionFunction
+        setPrecisionFunction(rootElemenet,outputXML);
+        //End of setPrecisionFunction
+
         Element templateElement = outputXML.getDocument().createElement("xsl:template");
         templateElement.setAttribute("match","/");
         rootElemenet.appendChild(templateElement);
@@ -88,6 +104,30 @@ public class XSLTCreator {
             traverseOutPutNode(outPutNode,outputXML,rootElemenet,templateElement);
         }
         outputXML.saveFile();
+    }
+
+    public static void setPrecisionFunction(Element rootElemenet,WriteXMLFile outputXML){
+        Element setPrecisionFunction = outputXML.getDocument().createElement("xsl:function");
+        setPrecisionFunction.setAttribute("name","own:setPrecision");
+        Element resultString = outputXML.getDocument().createElement("xsl:param");
+        resultString.setAttribute("name","resultString");
+        setPrecisionFunction.appendChild(resultString);
+        Element noOfDigits = outputXML.getDocument().createElement("xsl:param");
+        noOfDigits.setAttribute("name","noOfDigits");
+        setPrecisionFunction.appendChild(noOfDigits);
+        Element firstIf = outputXML.getDocument().createElement("xsl:if");
+        firstIf.setAttribute("test","$noOfDigits=0");
+        setPrecisionFunction.appendChild(firstIf);
+        Element firstValue = outputXML.getDocument().createElement("xsl:value-of");
+        firstValue.setAttribute("select","$resultString");
+        firstIf.appendChild(firstValue);
+        Element secondIf = outputXML.getDocument().createElement("xsl:if");
+        secondIf.setAttribute("test","$noOfDigits!=0");
+        setPrecisionFunction.appendChild(secondIf);
+        Element secondValue = outputXML.getDocument().createElement("xsl:value-of");
+        secondValue.setAttribute("select","own:setPrecision(concat($resultString,'0'),$noOfDigits - 1)");
+        secondIf.appendChild(secondValue);
+        rootElemenet.appendChild(setPrecisionFunction);
     }
 
     public static void createOutputNode(ReadXMLFile inputxmlFile, WriteXMLFile outputXMLFile,Element rootElement, Element templateElement){
@@ -468,9 +508,9 @@ public class XSLTCreator {
                             case "!=":
                                 return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" != "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
                             case "!==":
-                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" != "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
+                                return "not( if((string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+") castable as xs:double) or (string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+") castable as xs:double)) then( if((string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+") castable as xs:double) and (string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+") castable as xs:double)) then(true()) else false() ) else if((string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+") castable as xs:boolean) or (string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+") castable as xs:boolean)) then( if((string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+") castable as xs:boolean) and (string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+") castable as xs:boolean)) then(true()) else false() ) else true() )";
                             case "===":
-                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" = "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
+                                return "( if((string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+") castable as xs:double) or (string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+") castable as xs:double)) then( if((string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+") castable as xs:double) and (string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+") castable as xs:double)) then(true()) else false() ) else if((string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+") castable as xs:boolean) or (string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+") castable as xs:boolean)) then( if((string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+") castable as xs:boolean) and (string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+") castable as xs:boolean)) then(true()) else false() ) else true() )";
                             case ">":
                                 return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" > "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
                             case ">=":
@@ -527,17 +567,42 @@ public class XSLTCreator {
                     if(noOfDecimals==null){
                         if (operatorNode.getLeftContainer().getInNodes().size()==2) {
                             noOfDecimals = getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
-                            return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" * math:power( number('10'), "+noOfDecimals+" )";
+                            return "format-number( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" ,own:setPrecision('#.',number("+noOfDecimals+")))";
                         }
                     }else if(operatorNode.getLeftContainer().getInNodes().size()==1){
-                        return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" * math:power( number('10'), number('"+noOfDecimals+"') )";
+                        return  "format-number( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" ,own:setPrecision('#.',number("+noOfDecimals+")))";
                     }
                     break;
+                case MIN:
+                    if (operatorNode.getLeftContainer().getInNodes().size()>0) {
+                        String parameters = "";
+                        for(int i=0; i<operatorNode.getLeftContainer().getInNodes().size(); i++){
+                            if(i==0){
+                                parameters+=getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0));
+                            }else {
+                                parameters+=" , "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(i));
+                            }
+                        }
+                        return "min( ("+parameters+") )";
+                    }
+                case MAX:
+                    if (operatorNode.getLeftContainer().getInNodes().size()>0) {
+                        String parameters = "";
+                        for(int i=0; i<operatorNode.getLeftContainer().getInNodes().size(); i++){
+                            if(i==0){
+                                parameters+=getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0));
+                            }else {
+                                parameters+=" , "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(i));
+                            }
+                        }
+                        return "max( ("+parameters+") )";
+                    }
                 case IF_ELSE:
                     if(operatorNode.getLeftContainer().getInNodes().size()==3){
                         return "(if("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+")then("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+")else "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(2))+")";
                     }
                     break;
+
             }
         }else{
             InPutNode inPutNode = inPutNodes.get(Integer.parseInt(inNode.substring(19,20)));
