@@ -51,11 +51,4 @@ public class LeftContainer {
         return null;
     }
 
-    public void printContainer(){
-        System.out.println("-------------- Left container ----------------");
-        for (String i:this.inNodes){
-            System.out.println(i);
-        }
-        System.out.println("--------------               ------------------");
-    }
 }

@@ -38,13 +38,6 @@ public class ReadXMLFile {
         return this.fileReadable;
     }
 
-    public void closeFile(){
-        if(isDocumentReadable()){
-            //
-            this.fileReadable = false;
-        }
-    }
-
     public Document getDocument(){
         if(isDocumentReadable()){
             return this.document;

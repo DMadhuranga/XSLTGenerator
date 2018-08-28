@@ -49,11 +49,4 @@ public class RightContainer {
         return null;
     }
 
-    public void printContainer(){
-        System.out.println("-------------- Right container ----------------");
-        for (String i:this.outNodes){
-            System.out.println(i);
-        }
-        System.out.println("--------------               ------------------");
-    }
 }

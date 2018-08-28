@@ -37,13 +37,4 @@ public class InNode {
         return null;
     }
 
-    public void printInNode(){
-        System.out.println("__________ In nodes _______________");
-        for(String i : outNodes){
-            System.out.println(i);
-        }
-        System.out.println("__________            _______________");
-    }
-
-
 }

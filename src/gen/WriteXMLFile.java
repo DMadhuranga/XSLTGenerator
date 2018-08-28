@@ -30,10 +30,6 @@ public class WriteXMLFile {
         }
     }
 
-    public boolean isWriteable() {
-        return writeable;
-    }
-
     public boolean saveFile(){
         try {
             TransformerFactory transformerFactory = javax.xml.transform.TransformerFactory.newInstance();

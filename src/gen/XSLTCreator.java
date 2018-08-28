@@ -73,8 +73,21 @@ public class XSLTCreator {
     private static InPutNode currentInNode;
     private static ArrayList<OperatorNode> operatorNodes;
 
-    //XML related constants
+    //XML attributes
     private static final String NAME = "name";
+    private static final String SELECT = "select";
+    private static final String TEST = "test";
+
+    //xsl tag names
+    private static final String XSL_VALUE_OF = "xsl:value-of";
+    private static final String XSL_PARAM = "xsl:param";
+    private static final String XSL_IF = "xsl:if";
+    private static final String XSL_FOR_EACH = "xsl:for-each";
+    private static final String XSL_TEMPLATE = "xsl:template";
+
+    //node types
+    private static final String AT_NODE = "/@node";
+    private static final String AT_OPERATORS = "//@operators";
 
     public static void main(String[] args){
         transform("/home/danushka/Downloads/output.xml","/home/danushka/workspace/SampleFlowRegistry/NewConfig12.datamapper");
@@ -94,7 +107,7 @@ public class XSLTCreator {
         setPrecisionFunction(rootElemenet,outputXML);
         //End of setPrecisionFunction
 
-        Element templateElement = outputXML.getDocument().createElement("xsl:template");
+        Element templateElement = outputXML.getDocument().createElement(XSL_TEMPLATE);
         templateElement.setAttribute("match","/");
         rootElemenet.appendChild(templateElement);
         operatorNodes = createOperatorNodes(inputXML);
@@ -108,24 +121,24 @@ public class XSLTCreator {
 
     public static void setPrecisionFunction(Element rootElemenet,WriteXMLFile outputXML){
         Element setPrecisionFunction = outputXML.getDocument().createElement("xsl:function");
-        setPrecisionFunction.setAttribute("name","own:setPrecision");
-        Element resultString = outputXML.getDocument().createElement("xsl:param");
-        resultString.setAttribute("name","resultString");
+        setPrecisionFunction.setAttribute(NAME,"own:setPrecision");
+        Element resultString = outputXML.getDocument().createElement(XSL_PARAM);
+        resultString.setAttribute(NAME,"resultString");
         setPrecisionFunction.appendChild(resultString);
-        Element noOfDigits = outputXML.getDocument().createElement("xsl:param");
-        noOfDigits.setAttribute("name","noOfDigits");
+        Element noOfDigits = outputXML.getDocument().createElement(XSL_PARAM);
+        noOfDigits.setAttribute(NAME,"noOfDigits");
         setPrecisionFunction.appendChild(noOfDigits);
-        Element firstIf = outputXML.getDocument().createElement("xsl:if");
-        firstIf.setAttribute("test","$noOfDigits=0");
+        Element firstIf = outputXML.getDocument().createElement(XSL_IF);
+        firstIf.setAttribute(TEST,"$noOfDigits=0");
         setPrecisionFunction.appendChild(firstIf);
-        Element firstValue = outputXML.getDocument().createElement("xsl:value-of");
-        firstValue.setAttribute("select","$resultString");
+        Element firstValue = outputXML.getDocument().createElement(XSL_VALUE_OF);
+        firstValue.setAttribute(SELECT,"$resultString");
         firstIf.appendChild(firstValue);
-        Element secondIf = outputXML.getDocument().createElement("xsl:if");
-        secondIf.setAttribute("test","$noOfDigits!=0");
+        Element secondIf = outputXML.getDocument().createElement(XSL_IF);
+        secondIf.setAttribute(TEST,"$noOfDigits!=0");
         setPrecisionFunction.appendChild(secondIf);
-        Element secondValue = outputXML.getDocument().createElement("xsl:value-of");
-        secondValue.setAttribute("select","own:setPrecision(concat($resultString,'0'),$noOfDigits - 1)");
+        Element secondValue = outputXML.getDocument().createElement(XSL_VALUE_OF);
+        secondValue.setAttribute(SELECT,"own:setPrecision(concat($resultString,'0'),$noOfDigits - 1)");
         secondIf.appendChild(secondValue);
         rootElemenet.appendChild(setPrecisionFunction);
     }
@@ -135,11 +148,11 @@ public class XSLTCreator {
         Node outputNode = inputxmlFile.getDocument().getElementsByTagName(OUTPUT).item(0);
         for(OperatorNode operatorNode:operatorNodes){
             if(operatorNode.getProperty(OPERATOR_TYPE).equals(GLOBAL_VARIABLE)){
-                Element v = outputXMLFile.getDocument().createElement("xsl:param");
-                v.setAttribute("name","operators."+Integer.toString(operatorNodes.indexOf(operatorNode)));
-                v.setAttribute("global_name",operatorNode.getProperty("name"));
+                Element v = outputXMLFile.getDocument().createElement(XSL_PARAM);
+                v.setAttribute(NAME,"operators."+Integer.toString(operatorNodes.indexOf(operatorNode)));
+                v.setAttribute("global_name",operatorNode.getProperty(NAME));
                 String defaultValue = operatorNode.getProperty("defaultValue");
-                v.setAttribute("select","'"+defaultValue+"'");
+                v.setAttribute(SELECT,"'"+defaultValue+"'");
                 templateElement.appendChild(v);
             }
         }
@@ -175,9 +188,9 @@ public class XSLTCreator {
             if(node.getInNode().getOutNodes().size()>0){
                 Element currentElement = outputXMLFile.getDocument().createElement(node.getName());
                 parentElement.appendChild(currentElement);
-                Element valueOfElement = outputXMLFile.getDocument().createElement("xsl:value-of");
+                Element valueOfElement = outputXMLFile.getDocument().createElement(XSL_VALUE_OF);
                 currentElement.appendChild(valueOfElement);
-                valueOfElement.setAttribute("select",getValueFromMapping(node.getInNode().getOutNodes().get(0)));
+                valueOfElement.setAttribute(SELECT,getValueFromMapping(node.getInNode().getOutNodes().get(0)));
             }
         }else if(node.getProperties().get(TYPE).equals(ARRAY_TYPE)){
             InPutNode previousCurrentNode = currentInNode;
@@ -185,8 +198,8 @@ public class XSLTCreator {
             if(inNode!=null){
                 String arrayPath = getArrayPath(inNode);
                 if(!arrayPath.equals("")) {
-                    Element forEachElement = outputXMLFile.getDocument().createElement("xsl:for-each");
-                    forEachElement.setAttribute("select", arrayPath);
+                    Element forEachElement = outputXMLFile.getDocument().createElement(XSL_FOR_EACH);
+                    forEachElement.setAttribute(SELECT, arrayPath);
                     parentElement.appendChild(forEachElement);
                     Element currentElement = outputXMLFile.getDocument().createElement(node.getName());
                     forEachElement.appendChild(currentElement);
@@ -195,17 +208,17 @@ public class XSLTCreator {
                             traverseOutPutNode(childNode, outputXMLFile, rootElement, currentElement);
                         }
                     } else if (node.getInNode().getOutNodes().size() > 0) {
-                        Element valueOfElement = outputXMLFile.getDocument().createElement("xsl:value-of");
+                        Element valueOfElement = outputXMLFile.getDocument().createElement(XSL_VALUE_OF);
                         currentElement.appendChild(valueOfElement);
-                        valueOfElement.setAttribute("select", getValueFromMapping(node.getInNode().getOutNodes().get(0)));
+                        valueOfElement.setAttribute(SELECT, getValueFromMapping(node.getInNode().getOutNodes().get(0)));
                     }
                 }
             }else if(node.getInNode().getOutNodes().size()>0){
                 Element currentElement = outputXMLFile.getDocument().createElement(node.getName());
                 parentElement.appendChild(currentElement);
-                Element valueOfElement = outputXMLFile.getDocument().createElement("xsl:value-of");
+                Element valueOfElement = outputXMLFile.getDocument().createElement(XSL_VALUE_OF);
                 currentElement.appendChild(valueOfElement);
-                valueOfElement.setAttribute("select",getValueFromMapping(node.getInNode().getOutNodes().get(0)));
+                valueOfElement.setAttribute(SELECT,getValueFromMapping(node.getInNode().getOutNodes().get(0)));
             }
             currentInNode = previousCurrentNode;
         }else{
@@ -570,7 +583,7 @@ public class XSLTCreator {
                             return "format-number( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" ,own:setPrecision('#.',number("+noOfDecimals+")))";
                         }
                     }else if(operatorNode.getLeftContainer().getInNodes().size()==1){
-                        return  "format-number( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" ,own:setPrecision('#.',number("+noOfDecimals+")))";
+                        return  "format-number( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" ,own:setPrecision('#.',number('"+noOfDecimals+"')))";
                     }
                     break;
                 case MIN:
@@ -610,7 +623,7 @@ public class XSLTCreator {
             InPutNode currentNode = inPutNode;
             String path="";
             boolean parentFound = false;
-            while (inNodeString.contains("/@node")){
+            while (inNodeString.contains(AT_NODE)){
                 if(parentFound){
                     if(path.equals("")){
                         path = currentNode.getName();
@@ -717,7 +730,7 @@ public class XSLTCreator {
     }
 
     public static boolean isOperator(String inNode){
-        if(inNode.startsWith("//@operators")){
+        if(inNode.startsWith(AT_OPERATORS)){
             return true;
         }
         return false;
@@ -803,7 +816,7 @@ public class XSLTCreator {
         }else {
             InPutNode currentNode = inPutNodes.get(Integer.parseInt(inNode.substring(19, 20)));
             String inNodeString = StringUtils.substring(inNode, 20);
-            while (inNodeString.contains("/@node")) {
+            while (inNodeString.contains(AT_NODE)) {
                 currentNode = currentNode.getChildNodes().get(Integer.parseInt(inNodeString.substring(7, 8)));
                 inNodeString = StringUtils.substring(inNodeString, 8);
             }

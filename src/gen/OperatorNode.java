@@ -43,22 +43,6 @@ public class OperatorNode {
         return leftContainer;
     }
 
-    public RightContainer getRightContainer() {
-        return rightContainer;
-    }
-
-    public void printOperator(){
-        System.out.println("<---------   Operator -------->");
-        System.out.println("Properties:   ");
-        for(String key:this.attributes.keySet()){
-            System.out.println(key + " : "+this.attributes.get(key));
-        }
-        System.out.println("####### propreties");
-        this.leftContainer.printContainer();
-        this.rightContainer.printContainer();
-        System.out.println("<---------            -------->");
-    }
-
     public String getProperty(String property){
         return this.attributes.get(property);
     }
