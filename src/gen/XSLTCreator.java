@@ -4,7 +4,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import java.util.ArrayList;
-import org.apache.commons.lang3.StringUtils;
 
 public class XSLTCreator {
 
@@ -103,11 +102,7 @@ public class XSLTCreator {
         rootElement.setAttribute("version","2.0");
         rootElement.setAttribute("xmlns:own","http://whatever");
         outputXML.getDocument().appendChild(rootElement);
-
-        //Setting up setPrecisionFunction
         setPrecisionFunction(rootElement,outputXML);
-        //End of setPrecisionFunction
-
         Element templateElement = outputXML.getDocument().createElement(XSL_TEMPLATE);
         templateElement.setAttribute("match","/");
         rootElement.appendChild(templateElement);
@@ -629,7 +624,7 @@ public class XSLTCreator {
             }
         }else{
             InPutNode inPutNode = inPutNodes.get(Integer.parseInt(inNode.substring(19,20)));
-            String inNodeString = StringUtils.substring(inNode,20);
+            String inNodeString = substring(inNode,20);
             InPutNode currentNode = inPutNode;
             String path="";
             boolean parentFound = false;
@@ -645,7 +640,7 @@ public class XSLTCreator {
                     parentFound = true;
                 }
                 currentNode = currentNode.getChildNodes().get(Integer.parseInt(inNodeString.substring(7,8)));
-                inNodeString = StringUtils.substring(inNodeString,8);
+                inNodeString = substring(inNodeString,8);
             }
             if(currentInNode==null){
                 if(currentNode.getProperty(TYPE).equals(BOOLEAN_TYPE)){
@@ -753,10 +748,10 @@ public class XSLTCreator {
             return getHighestLevelNode(inNodes);
         }else {
             InPutNode currentNode = inPutNodes.get(Integer.parseInt(inNode.substring(19, 20)));
-            String inNodeString = StringUtils.substring(inNode, 20);
+            String inNodeString = substring(inNode, 20);
             while (inNodeString.contains(AT_NODE)) {
                 currentNode = currentNode.getChildNodes().get(Integer.parseInt(inNodeString.substring(7, 8)));
-                inNodeString = StringUtils.substring(inNodeString, 8);
+                inNodeString = substring(inNodeString, 8);
             }
             while (!(currentNode.getProperty(TYPE).equals(ARRAY_TYPE) || currentNode.getParentNode()==null)){
                 if(currentNode.getParentNode()!=null){
@@ -790,6 +785,22 @@ public class XSLTCreator {
             }
         }
         return newArray;
+    }
+
+    private static String substring(String str, int start) {
+        if (str == null) {
+            return null;
+        } else {
+            if (start < 0) {
+                start += str.length();
+            }
+
+            if (start < 0) {
+                start = 0;
+            }
+
+            return start > str.length() ? "" : str.substring(start);
+        }
     }
 
 }
