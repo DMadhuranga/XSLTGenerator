@@ -21,7 +21,7 @@ public class XSLTCreator {
     private static final String TREE_NODE= "treeNode";
     private static final String OPERATOR_TYPE = "operatorType";
 
-    //arithmatic
+    //arithmetic operators
     private static final String ADD = "ADD";
     private static final String SUBTRACT = "SUBTRACT";
     private static final String DIVIDE = "DIVIDE";
@@ -90,36 +90,37 @@ public class XSLTCreator {
     private static final String AT_OPERATORS = "//@operators";
 
     public static void main(String[] args){
-        transform("/home/danushka/Downloads/output.xml","/home/danushka/workspace/SampleFlowRegistry/NewConfig12.datamapper");
+        transform("/home/danushka/Downloads/output.xml",
+                "/home/danushka/workspace/SampleFlowRegistry/NewConfig12.datamapper");
     }
 
-    public static void transform(String outputFilePath, String styleSheetFile){
+    private static void transform(String outputFilePath, String styleSheetFile){
         ReadXMLFile inputXML = new ReadXMLFile(styleSheetFile);
         WriteXMLFile outputXML = new WriteXMLFile(outputFilePath);
-        Element rootElemenet = outputXML.getDocument().createElement("xsl:stylesheet");
-        rootElemenet.setAttribute("xmlns:xsl","http://www.w3.org/1999/XSL/Transform");
-        rootElemenet.setAttribute("xmlns:xs","http://www.w3.org/2001/XMLSchema");
-        rootElemenet.setAttribute("version","2.0");
-        rootElemenet.setAttribute("xmlns:own","http://whatever");
-        outputXML.getDocument().appendChild(rootElemenet);
+        Element rootElement = outputXML.getDocument().createElement("xsl:stylesheet");
+        rootElement.setAttribute("xmlns:xsl","http://www.w3.org/1999/XSL/Transform");
+        rootElement.setAttribute("xmlns:xs","http://www.w3.org/2001/XMLSchema");
+        rootElement.setAttribute("version","2.0");
+        rootElement.setAttribute("xmlns:own","http://whatever");
+        outputXML.getDocument().appendChild(rootElement);
 
         //Setting up setPrecisionFunction
-        setPrecisionFunction(rootElemenet,outputXML);
+        setPrecisionFunction(rootElement,outputXML);
         //End of setPrecisionFunction
 
         Element templateElement = outputXML.getDocument().createElement(XSL_TEMPLATE);
         templateElement.setAttribute("match","/");
-        rootElemenet.appendChild(templateElement);
+        rootElement.appendChild(templateElement);
         operatorNodes = createOperatorNodes(inputXML);
         createInputNode(inputXML);
-        createOutputNode(inputXML,outputXML,rootElemenet,templateElement);
+        createOutputNode(inputXML,outputXML, templateElement);
         for (OutPutNode outPutNode:outPutNodes) {
-            traverseOutPutNode(outPutNode,outputXML,rootElemenet,templateElement);
+            traverseOutPutNode(outPutNode,outputXML,rootElement,templateElement);
         }
         outputXML.saveFile();
     }
 
-    public static void setPrecisionFunction(Element rootElemenet,WriteXMLFile outputXML){
+    private static void setPrecisionFunction(Element rootElement, WriteXMLFile outputXML){
         Element setPrecisionFunction = outputXML.getDocument().createElement("xsl:function");
         setPrecisionFunction.setAttribute(NAME,"own:setPrecision");
         Element resultString = outputXML.getDocument().createElement(XSL_PARAM);
@@ -140,12 +141,12 @@ public class XSLTCreator {
         Element secondValue = outputXML.getDocument().createElement(XSL_VALUE_OF);
         secondValue.setAttribute(SELECT,"own:setPrecision(concat($resultString,'0'),$noOfDigits - 1)");
         secondIf.appendChild(secondValue);
-        rootElemenet.appendChild(setPrecisionFunction);
+        rootElement.appendChild(setPrecisionFunction);
     }
 
-    public static void createOutputNode(ReadXMLFile inputxmlFile, WriteXMLFile outputXMLFile,Element rootElement, Element templateElement){
+    private static void createOutputNode(ReadXMLFile inputXMLFile, WriteXMLFile outputXMLFile, Element templateElement){
         outPutNodes = new ArrayList<>();
-        Node outputNode = inputxmlFile.getDocument().getElementsByTagName(OUTPUT).item(0);
+        Node outputNode = inputXMLFile.getDocument().getElementsByTagName(OUTPUT).item(0);
         for(OperatorNode operatorNode:operatorNodes){
             if(operatorNode.getProperty(OPERATOR_TYPE).equals(GLOBAL_VARIABLE)){
                 Element v = outputXMLFile.getDocument().createElement(XSL_PARAM);
@@ -158,14 +159,14 @@ public class XSLTCreator {
         }
         for(int i=0;i<outputNode.getChildNodes().getLength();i++){
             if(outputNode.getChildNodes().item(i).getNodeName().equals(TREE_NODE)){
-                outPutNodes.add(new OutPutNode(outputNode.getChildNodes().item(i),null,""));
+                outPutNodes.add(new OutPutNode(outputNode.getChildNodes().item(i), ""));
             }
         }
     }
 
-    public static void createInputNode(ReadXMLFile inputxmlFile){
+    private static void createInputNode(ReadXMLFile inputXMLFile){
         inPutNodes = new ArrayList<>();
-        Node inputNode = inputxmlFile.getDocument().getElementsByTagName(INPUT).item(0);
+        Node inputNode = inputXMLFile.getDocument().getElementsByTagName(INPUT).item(0);
         for(int i=0;i<inputNode.getChildNodes().getLength();i++){
             if(inputNode.getChildNodes().item(i).getNodeName().equals(TREE_NODE)){
                 inPutNodes.add(new InPutNode(inputNode.getChildNodes().item(i),null,""));
@@ -173,18 +174,20 @@ public class XSLTCreator {
         }
     }
 
-    public static ArrayList<OperatorNode> createOperatorNodes(ReadXMLFile inputxmlFile){
+    private static ArrayList<OperatorNode> createOperatorNodes(ReadXMLFile inputXMLFile){
         ArrayList<OperatorNode> operatorNodes = new ArrayList<>();
-        NodeList operators = inputxmlFile.getDocument().getElementsByTagName("operators");
+        NodeList operators = inputXMLFile.getDocument().getElementsByTagName("operators");
         for(int i=0;i<operators.getLength();i++){
             operatorNodes.add(new OperatorNode(operators.item(i)));
         }
         return operatorNodes;
     }
 
-    public static void traverseOutPutNode(OutPutNode node,WriteXMLFile outputXMLFile, Element rootElement, Element parentElement){
+    private static void traverseOutPutNode(OutPutNode node, WriteXMLFile outputXMLFile, Element rootElement,
+                                           Element parentElement){
         //System.out.println(currentNode.getAttributes().getNamedItem("schemaDataType").getNodeValue());
-        if(node.getProperties().get(TYPE).equals(STRING_TYPE) || node.getProperties().get(TYPE).equals(NUMBER_TYPE) || node.getProperties().get(TYPE).equals(BOOLEAN_TYPE)){
+        if(node.getProperties().get(TYPE).equals(STRING_TYPE) || node.getProperties().get(TYPE).equals(NUMBER_TYPE) ||
+                node.getProperties().get(TYPE).equals(BOOLEAN_TYPE)){
             if(node.getInNode().getOutNodes().size()>0){
                 Element currentElement = outputXMLFile.getDocument().createElement(node.getName());
                 parentElement.appendChild(currentElement);
@@ -230,7 +233,7 @@ public class XSLTCreator {
         }
     }
 
-    public static String getArrayPath(InPutNode node){
+    private static String getArrayPath(InPutNode node){
         if(currentInNode==null){
             InPutNode tempNode = node;
             while (tempNode.getParentNode()!=null){
@@ -240,7 +243,7 @@ public class XSLTCreator {
                 tempNode = tempNode.getParentNode();
             }
             currentInNode = node;
-            return node.getxPath();
+            return node.getXPath();
         }else{
             if(node==currentInNode){
                 return "";
@@ -267,61 +270,9 @@ public class XSLTCreator {
             }
             return path;
         }
-        /*
-        String[] cPathArray = currentPath.split("/");
-        String[] xPathArray = node.getxPath().split("/");
-        String precessorPath = "";
-        String path = "";
-        int cnt = 0;
-        boolean matching= true;
-        while (matching && (cPathArray.length>cnt && xPathArray.length>cnt)){
-            if(xPathArray[cnt].equals(cPathArray[cnt])){
-                cnt++;
-            }else{
-                matching=false;
-            }
-        }
-        int back = xPathArray.length-1;
-        gen.InPutNode tempNode = node;
-        while (back>cnt && tempNode.getParentNode()!=null){
-            if(tempNode.getParentNode().getProperty(type).equals(arrayType)){
-                node = tempNode.getParentNode();
-            }
-            tempNode = tempNode.getParentNode();
-            back--;
-        }
-        xPathArray = node.getxPath().split("/");
-        cnt = 0;
-        matching= true;
-        while (matching && (cPathArray.length>cnt && xPathArray.length>cnt)){
-            if(xPathArray[cnt].equals(cPathArray[cnt])){
-                precessorPath+=cPathArray[cnt]+"/";
-                xPathArray = removeElementAt(xPathArray,cnt);
-                cPathArray = removeElementAt(cPathArray,cnt);
-            }else{
-                matching=false;
-            }
-        }
-        for (String s:cPathArray) {
-            if(!s.equals("")){
-                path="../"+path;
-            }
-        }
-        for (String s:xPathArray) {
-            if(path.length()==0 || path.charAt(path.length()-1)=='/'){
-                path = path+s;
-            }else {
-                path = path + "/" +s;
-            }
-        }
-        if(!path.equals("")){
-            currentPath = precessorPath+path;
-        }
-        return path;
-        */
     }
 
-    public static String getValueFromMapping(String inNode){
+    private static String getValueFromMapping(String inNode){
         if(isOperator(inNode)){
             String index = inNode.substring(13,14);
             int currentIndex = 14;
@@ -332,7 +283,7 @@ public class XSLTCreator {
                     if(nextDigit.equals("/")){
                         moreDigits = false;
                     }else {
-                        index = index+nextDigit;
+                        index += nextDigit;
                         currentIndex++;
                     }
                 }catch (Exception e){
@@ -353,37 +304,46 @@ public class XSLTCreator {
                     return "'"+operatorNode.getProperty("constantValue")+"'";
                 case CONCAT:
                     if(operatorNode.getLeftContainer().getInNodes().size()==2){
-                        return "concat("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+","+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+")";
+                        return "concat("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+","+
+                                getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+")";
                     }
                     break;
                 case LOWERCASE:
                     if(operatorNode.getLeftContainer().getInNodes().size()>0) {
-                        return "lower-case(" + getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0)) + ")";
+                        return "lower-case(" + getValueFromMapping(operatorNode.getLeftContainer().getInNodes().
+                                get(0)) + ")";
                     }
                     break;
                 case UPPERCASE:
                     if(operatorNode.getLeftContainer().getInNodes().size()>0) {
-                        return "upper-case(" + getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0)) + ")";
+                        return "upper-case(" + getValueFromMapping(operatorNode.getLeftContainer().getInNodes().
+                                get(0)) + ")";
                     }
                     break;
                 case STRING_LENGTH:
                     if(operatorNode.getLeftContainer().getInNodes().size()>0) {
-                        return "string-length(" + getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0)) + ")";
+                        return "string-length(" + getValueFromMapping(operatorNode.getLeftContainer().getInNodes().
+                                get(0)) + ")";
                     }
                     break;
                 case SPLIT:
                     if(operatorNode.getLeftContainer().getInNodes().size()>0) {
-                        return "tokenize(" + getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0)) + ",'" +operatorNode.getProperty("delimiter")+"')["+Integer.toString(Integer.parseInt(inNode.substring(inNode.lastIndexOf("@rightConnectors.")+17,inNode.lastIndexOf("@rightConnectors.")+18))+1)+"]";
+                        return "tokenize(" + getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0)) +
+                                ",'" +operatorNode.getProperty("delimiter")+"')["+Integer.toString(Integer.
+                                parseInt(inNode.substring(inNode.lastIndexOf("@rightConnectors.")+17,inNode.
+                                        lastIndexOf("@rightConnectors.")+18))+1)+"]";
                     }
                     break;
                 case TO_STRING:
                     if(operatorNode.getLeftContainer().getInNodes().size()>0) {
-                        return "string(" + getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0)) + ")";
+                        return "string(" + getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0)) +
+                                ")";
                     }
                     break;
                 case STRING_TO_NUMBER:
                     if(operatorNode.getLeftContainer().getInNodes().size()>0) {
-                        return "number(" + getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0)) + ")";
+                        return "number(" + getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0)) +
+                                ")";
                     }
                     break;
                 case STRING_TO_BOOLEAN:
@@ -400,7 +360,8 @@ public class XSLTCreator {
                     if(operatorNode.getLeftContainer().getInNodes().size()>1) {
                         String value = getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0));
                         for(int i=1;i<operatorNode.getLeftContainer().getInNodes().size();i++){
-                            value = " ( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(i))+" ) and ( "+value+" )";
+                            value = " ( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(i))+
+                                    " ) and ( "+value+" )";
                         }
                         return value;
                     }
@@ -409,7 +370,8 @@ public class XSLTCreator {
                     if(operatorNode.getLeftContainer().getInNodes().size()>1) {
                         String value = getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0));
                         for(int i=1;i<operatorNode.getLeftContainer().getInNodes().size();i++){
-                            value = getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(i))+" or "+value;
+                            value = getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(i))+
+                                    " or "+value;
                         }
                         return value;
                     }
@@ -458,7 +420,8 @@ public class XSLTCreator {
                         }
                     }
                     if(startIndex!=null && endIndex!=null){
-                        return "substring( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" , "+startIndex+" , "+startIndex+" + "+endIndex+" )";
+                        return "substring( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+
+                                " , "+startIndex+" , "+startIndex+" + "+endIndex+" )";
                     }
                     break;
                 case REPLACE:
@@ -485,7 +448,8 @@ public class XSLTCreator {
                         }
                     }
                     if(target!=null && replaceString!=null){
-                        return "replace( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" , "+target+" , "+replaceString+" )";
+                        return "replace( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+
+                                " , "+target+" , "+replaceString+" )";
                     }
                     break;
                 case MATCH:
@@ -498,12 +462,14 @@ public class XSLTCreator {
                         pattern = "'"+pattern.substring(1,pattern.length()-1)+"'";
                     }
                     if(pattern!=null){
-                        return "matches( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" , "+pattern+" )";
+                        return "matches( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+
+                                " , "+pattern+" )";
                     }
                     break;
                 case TRIM:
                     if(operatorNode.getLeftContainer().getInNodes().size()>0){
-                        return "replace(replace("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+",'\\s+$',''),'^\\s+','')";
+                        return "replace(replace("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().
+                                get(0))+",'\\s+$',''),'^\\s+','')";
                     }
                     break;
                 case GLOBAL_VARIABLE:
@@ -514,50 +480,91 @@ public class XSLTCreator {
                     String comparisonOperator = operatorNode.getAttributes().get("comparisonOperator");
                     if(comparisonOperator==null){
                         if(operatorNode.getLeftContainer().getInNodes().size()==2){
-                            return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" = "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
+                            return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" = "+
+                                    getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
                         }
                     }else {
                         switch (comparisonOperator){
                             case "!=":
-                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" != "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
+                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" != "+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
                             case "!==":
-                                return "not( if((string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+") castable as xs:double) or (string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+") castable as xs:double)) then( if((string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+") castable as xs:double) and (string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+") castable as xs:double)) then(true()) else false() ) else if((string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+") castable as xs:boolean) or (string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+") castable as xs:boolean)) then( if((string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+") castable as xs:boolean) and (string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+") castable as xs:boolean)) then(true()) else false() ) else true() )";
+                                return "not( if((string("+getValueFromMapping(operatorNode.getLeftContainer().
+                                        getInNodes().get(0))+") castable as xs:double) or (string("+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+
+                                        ") castable as xs:double)) then( if((string("+getValueFromMapping(operatorNode.
+                                        getLeftContainer().getInNodes().get(0))+
+                                        ") castable as xs:double) and (string("+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+
+                                        ") castable as xs:double)) then(true()) else false() ) else if((string("+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+
+                                        ") castable as xs:boolean) or (string("+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+
+                                        ") castable as xs:boolean)) then( if((string("+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+
+                                        ") castable as xs:boolean) and (string("+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+
+                                        ") castable as xs:boolean)) then(true()) else false() ) else true() )";
                             case "===":
-                                return "( if((string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+") castable as xs:double) or (string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+") castable as xs:double)) then( if((string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+") castable as xs:double) and (string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+") castable as xs:double)) then(true()) else false() ) else if((string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+") castable as xs:boolean) or (string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+") castable as xs:boolean)) then( if((string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+") castable as xs:boolean) and (string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+") castable as xs:boolean)) then(true()) else false() ) else true() )";
+                                return "( if((string("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes()
+                                        .get(0))+") castable as xs:double) or (string("+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+
+                                        ") castable as xs:double)) then( if((string("+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+
+                                        ") castable as xs:double) and (string("+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+
+                                        ") castable as xs:double)) then(true()) else false() ) else if((string("+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+
+                                        ") castable as xs:boolean) or (string("+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+
+                                        ") castable as xs:boolean)) then( if((string("+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+
+                                        ") castable as xs:boolean) and (string("+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+
+                                        ") castable as xs:boolean)) then(true()) else false() ) else true() )";
                             case ">":
-                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" > "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
+                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" > "+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
                             case ">=":
-                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" >= "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
+                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" >= "+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
                             case "<":
-                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" < "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
+                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" < "+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
                             case "<=":
-                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" <= "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
+                                return getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" <= "+
+                                        getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
                         }
                     }
                     break;
                 case ADD:
                     if(operatorNode.getLeftContainer().getInNodes().size()==2){
-                        return "( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" + "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+" )";
+                        return "( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" + "+
+                                getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+" )";
                     }
                     break;
                 case SUBTRACT:
                     if(operatorNode.getLeftContainer().getInNodes().size()==2){
-                        return "( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" - "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+" )";
+                        return "( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" - "+
+                                getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+" )";
                     }
                     break;
                 case DIVIDE:
                     if(operatorNode.getLeftContainer().getInNodes().size()==2){
-                        return "( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" div "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+" )";
+                        return "( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" div "+
+                                getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+" )";
                     }
                     break;
                 case MULTIPLY:
                     if(operatorNode.getLeftContainer().getInNodes().size()==2){
-                        return "( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" * "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+" )";
+                        return "( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" * "+
+                                getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+" )";
                     }
                     break;
                 case CEILING:
                     if(operatorNode.getLeftContainer().getInNodes().size()==1){
-                        return "ceiling( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" )";
+                        return "ceiling( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+
+                                " )";
                     }
                     break;
                 case FLOOR:
@@ -580,10 +587,12 @@ public class XSLTCreator {
                     if(noOfDecimals==null){
                         if (operatorNode.getLeftContainer().getInNodes().size()==2) {
                             noOfDecimals = getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1));
-                            return "format-number( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" ,own:setPrecision('#.',number("+noOfDecimals+")))";
+                            return "format-number( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().
+                                    get(0))+" ,own:setPrecision('#.',number("+noOfDecimals+")))";
                         }
                     }else if(operatorNode.getLeftContainer().getInNodes().size()==1){
-                        return  "format-number( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+" ,own:setPrecision('#.',number('"+noOfDecimals+"')))";
+                        return  "format-number( "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().
+                                get(0))+" ,own:setPrecision('#.',number('"+noOfDecimals+"')))";
                     }
                     break;
                 case MIN:
@@ -593,7 +602,8 @@ public class XSLTCreator {
                             if(i==0){
                                 parameters+=getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0));
                             }else {
-                                parameters+=" , "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(i));
+                                parameters+=" , "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().
+                                        get(i));
                             }
                         }
                         return "min( ("+parameters+") )";
@@ -605,14 +615,17 @@ public class XSLTCreator {
                             if(i==0){
                                 parameters+=getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0));
                             }else {
-                                parameters+=" , "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(i));
+                                parameters+=" , "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().
+                                        get(i));
                             }
                         }
                         return "max( ("+parameters+") )";
                     }
                 case IF_ELSE:
                     if(operatorNode.getLeftContainer().getInNodes().size()==3){
-                        return "(if("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+")then("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+")else "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(2))+")";
+                        return "(if("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(0))+
+                                ")then("+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(1))+
+                                ")else "+getValueFromMapping(operatorNode.getLeftContainer().getInNodes().get(2))+")";
                     }
                     break;
 
@@ -639,11 +652,11 @@ public class XSLTCreator {
             }
             if(currentInNode==null){
                 if(currentNode.getProperty(TYPE).equals(BOOLEAN_TYPE)){
-                    return currentNode.getxPath()+" eq 'true' ";
+                    return currentNode.getXPath()+" eq 'true' ";
                 }else if(currentNode.getProperty(TYPE).equals(NUMBER_TYPE)){
-                    return "number( "+currentNode.getxPath()+" )";
+                    return "number( "+currentNode.getXPath()+" )";
                 }
-                return currentNode.getxPath();
+                return currentNode.getXPath();
             }else if(parentFound){
                 if(path.equals("")){
                     if(currentNode.getProperty(TYPE).equals(BOOLEAN_TYPE)){
@@ -660,8 +673,8 @@ public class XSLTCreator {
                 }
                 return path+"/"+currentNode.getName();
             }else{
-                String[] cPathParts = currentInNode.getxPath().split("/");
-                String[] xPathParts = currentNode.getxPath().split("/");
+                String[] cPathParts = currentInNode.getXPath().split("/");
+                String[] xPathParts = currentNode.getXPath().split("/");
                 boolean matching = true;
                 if(!cPathParts[0].equals(xPathParts[0])){
                     matching = false;
@@ -670,7 +683,8 @@ public class XSLTCreator {
                     cPathParts = removeElementAt(cPathParts,0);
                     xPathParts = removeElementAt(xPathParts,0);
                 }
-                while ((matching && cPathParts.length>0) && (xPathParts.length>0 && xPathParts[0].equals(cPathParts[0]))){
+                while ((matching && cPathParts.length>0) && (xPathParts.length>0 &&
+                        xPathParts[0].equals(cPathParts[0]))){
                     xPathParts = removeElementAt(xPathParts,0);
                     cPathParts = removeElementAt(cPathParts,0);
                 }
@@ -693,90 +707,17 @@ public class XSLTCreator {
                 }
                 return path;
             }
-            /*String xPath = "";
-            String[] cPathParts = getCurrentPath().split("/");
-            boolean matching = true;
-            if(!cPathParts[0].equals(inPutNode.getName())){
-                matching = false;
-                xPath = inPutNode.getName();
-            }else{
-                cPathParts = removeElementAt(cPathParts,0);
-            }
-            gen.InPutNode currentNode = inPutNode;
-            String inNodeString = StringUtils.substring(inNode,20);
-            while (inNodeString.contains("/@node")){
-                currentNode = currentNode.getChildNodes().get(Integer.parseInt(inNodeString.substring(7,8)));
-                inNodeString = StringUtils.substring(inNodeString,8);
-                if((matching && cPathParts.length>0) && cPathParts[0].equals(currentNode.getName())){
-                    cPathParts = removeElementAt(cPathParts,0);
-                }else{
-                    matching = false;
-                    if(xPath.equals("")){
-                        xPath=xPath+currentNode.getName();
-                    }else {
-                        xPath=xPath+"/"+currentNode.getName();
-                    }
-                }
-            }
-            for (String s:cPathParts) {
-                if(!s.equals("")){
-                    xPath="../"+xPath;
-                }
-            }
-            return xPath;*/
+
         }
 
         return "";
     }
 
-    public static boolean isOperator(String inNode){
-        if(inNode.startsWith(AT_OPERATORS)){
-            return true;
-        }
-        return false;
+    private static boolean isOperator(String inNode){
+        return inNode.startsWith(AT_OPERATORS);
     }
 
-    public static OperatorNode getOperatorNode(String operatorNode){
-        String index = operatorNode.substring(13,14);
-        int currentIndex = 14;
-        boolean moreDigits = true;
-        while (moreDigits){
-            try{
-                String nextDigit = operatorNode.substring(currentIndex,currentIndex+1);
-                if(nextDigit.equals("/")){
-                    moreDigits = false;
-                }else {
-                    index = index+nextDigit;
-                    currentIndex++;
-                }
-            }catch (Exception e){
-                moreDigits = false;
-            }
-        }
-        return operatorNodes.get(Integer.parseInt(index));
-    }
-
-    /*public static gen.InPutNode getInNode(gen.InPutNode inPutNode, ArrayList<gen.OperatorNode> operatorNodes, String inNode){
-        if(isOperator(inNode)){
-            gen.OperatorNode operatorNode = operatorNodes.get(Integer.parseInt(inNode.substring(13,14)));
-            String inNodeString = StringUtils.substring(inNode,20);
-            while (inNodeString.contains("/@node")){
-                currentNode = currentNode.getChildNodes().get(Integer.parseInt(inNodeString.substring(7,8)));
-                inNodeString = StringUtils.substring(inNodeString,8);
-            }
-            return currentNode;
-        }else{
-            gen.InPutNode currentNode = inPutNode.getChildNodes().get(Integer.parseInt(inNode.substring(19,20)));
-            String inNodeString = StringUtils.substring(inNode,20);
-            while (inNodeString.contains("/@node")){
-                currentNode = currentNode.getChildNodes().get(Integer.parseInt(inNodeString.substring(7,8)));
-                inNodeString = StringUtils.substring(inNodeString,8);
-            }
-            return currentNode;
-        }
-    }*/
-
-    public static InPutNode traverseArray(OutPutNode node,ArrayList<OperatorNode> operatorNodes){
+    private static InPutNode traverseArray(OutPutNode node, ArrayList<OperatorNode> operatorNodes){
         ArrayList<InPutNode> arrayNodes = new ArrayList<>();
         if(node.getProperty(TYPE).equals(ARRAY_TYPE)){
             if(node.getProperty(ITEMS_TYPE).equals(OBJECT_TYPE)){
@@ -802,7 +743,7 @@ public class XSLTCreator {
         return getHighestLevelNode(arrayNodes);
     }
 
-    public static InPutNode getArrayElement(String inNode, ArrayList<OperatorNode> operatorNodes){
+    private static InPutNode getArrayElement(String inNode, ArrayList<OperatorNode> operatorNodes){
         if(isOperator(inNode)) {
             OperatorNode operatorNode = operatorNodes.get(Integer.parseInt(inNode.substring(13, 14)));
             ArrayList<InPutNode> inNodes = new ArrayList<>();
@@ -829,7 +770,7 @@ public class XSLTCreator {
         }
     }
 
-    public static InPutNode getHighestLevelNode(ArrayList<InPutNode> arrayNodes){
+    private static InPutNode getHighestLevelNode(ArrayList<InPutNode> arrayNodes){
         int maxArray = 0;
         for (int i=0; i<arrayNodes.size(); i++) {
             if(arrayNodes.get(i).getLevel()>arrayNodes.get(maxArray).getLevel()){
@@ -842,7 +783,7 @@ public class XSLTCreator {
         return null;
     }
 
-    public static String[] removeElementAt(String[] array, int removedIdx){
+    private static String[] removeElementAt(String[] array, int removedIdx){
         String[] newArray = new String[array.length-1];
         for(int i=0;i<array.length;i++){
             if(i<removedIdx){

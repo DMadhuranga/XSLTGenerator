@@ -5,21 +5,17 @@ import java.util.HashMap;
 import org.w3c.dom.Node;
 
 public class InPutNode extends XMLNode{
-    private String schemaDataType;
     private String level;
-    private OutNode outNode;
-    private InNode inNode;
     private ArrayList<InPutNode> childNodes;
     private HashMap<String,String> properties;
     private InPutNode parentNode;
     private String xPath;
 
-    public String getxPath() {
+    public String getXPath() {
         return xPath;
     }
 
     public InPutNode(Node node, InPutNode parentNode, String xPath){
-        this.schemaDataType = getAttribute(node,"schemaDataType");
         this.name = getAttribute(node,"name");
         this.level = getAttribute(node,"level");
         this.properties = new HashMap<>();
@@ -37,7 +33,7 @@ public class InPutNode extends XMLNode{
         return parentNode;
     }
 
-    public void populate(Node node){
+    private void populate(Node node){
         for(int i=0;i<node.getChildNodes().getLength();i++){
             Node childNode = node.getChildNodes().item(i);
             if (childNode.getAttributes() != null) {
@@ -45,10 +41,6 @@ public class InPutNode extends XMLNode{
                     this.properties.put(childNode.getAttributes().getNamedItem("key").getTextContent(),childNode.getAttributes().getNamedItem("value").getTextContent());
                 }else if (childNode.getNodeName().equals("node")) {
                     this.childNodes.add(new InPutNode(childNode,this,this.xPath));
-                }else if (childNode.getNodeName().equals("outNode")) {
-                    this.outNode = new OutNode(childNode);
-                }else if (childNode.getNodeName().equals("inNode")) {
-                    this.inNode = new InNode(childNode);
                 }
             }
         }

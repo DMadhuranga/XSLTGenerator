@@ -6,14 +6,13 @@ import org.w3c.dom.Node;
 public class OperatorNode {
     private HashMap<String,String> attributes;
     private LeftContainer leftContainer;
-    private RightContainer rightContainer;
 
     public OperatorNode(Node node){
         this.attributes = new HashMap<>();
         populate(node);
     }
 
-    public void populate(Node node){
+    private void populate(Node node){
         for(int i=0;i<node.getChildNodes().getLength();i++){
             Node basicContainer = node.getChildNodes().item(i);
             if(basicContainer.getAttributes()!=null && basicContainer.getNodeName().equals("basicContainer")){
@@ -22,8 +21,6 @@ public class OperatorNode {
                     if(childNode.getAttributes()!=null){
                         if(childNode.getNodeName().equals("leftContainer")){
                             this.leftContainer = new LeftContainer(childNode);
-                        }else if(childNode.getNodeName().equals("rightContainer")){
-                            this.rightContainer= new RightContainer(childNode);
                         }
                     }
                 }

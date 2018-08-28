@@ -26,7 +26,7 @@ public class InNode {
         return outNodes;
     }
 
-    public String getAttribute(Node node, String property){
+    private String getAttribute(Node node, String property){
         if(node.getAttributes()!=null && node.getNodeName().equals("inNode")){
             try {
                 return node.getAttributes().getNamedItem(property).getTextContent();

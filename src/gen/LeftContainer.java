@@ -15,7 +15,7 @@ public class LeftContainer {
         return inNodes;
     }
 
-    public void populate(Node node){
+    private void populate(Node node){
         for (int i = 0; i < node.getChildNodes().getLength(); i++) {
             Node leftConnector = node.getChildNodes().item(i);
             if (leftConnector.getAttributes() != null && leftConnector.getNodeName().equals("leftConnectors")) {

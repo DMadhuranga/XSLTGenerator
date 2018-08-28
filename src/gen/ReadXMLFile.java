@@ -10,10 +10,10 @@ public class ReadXMLFile {
     private String fileName;
     private String filePath;
     private boolean fileReadable;
-    File file;
-    DocumentBuilderFactory documentBuilderFactory;
-    DocumentBuilder documentBuilder;
-    Document document;
+    private File file;
+    private DocumentBuilderFactory documentBuilderFactory;
+    private DocumentBuilder documentBuilder;
+    private Document document;
 
 
     public ReadXMLFile(String filePath){
@@ -21,7 +21,7 @@ public class ReadXMLFile {
         readyFile();
     }
 
-    public void readyFile(){
+    private void readyFile(){
         this.file = new File(this.filePath);
         this.documentBuilderFactory = DocumentBuilderFactory
                 .newInstance();
@@ -34,7 +34,7 @@ public class ReadXMLFile {
         }
     }
 
-    public boolean isDocumentReadable(){
+    private boolean isDocumentReadable(){
         return this.fileReadable;
     }
 

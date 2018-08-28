@@ -1,7 +1,5 @@
 package gen;
 
-import org.w3c.dom.Node;
-
 import org.w3c.dom.Document;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -16,7 +14,7 @@ public class WriteXMLFile {
     private DocumentBuilder docBuilder;
     private Document document;
     private String filePath;
-    private boolean writeable;
+    private boolean writeAble;
 
     public WriteXMLFile(String filePath){
         this.filePath = filePath;
@@ -24,9 +22,9 @@ public class WriteXMLFile {
         try {
             docBuilder = docFactory.newDocumentBuilder();
             document = (Document) docBuilder.newDocument();
-            this.writeable = true;
+            this.writeAble = true;
         }catch (Exception e){
-            this.writeable = false;
+            this.writeAble = false;
         }
     }
 

@@ -1,13 +1,11 @@
 import javax.xml.transform.*;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.StringWriter;
 
 import net.sf.saxon.*;
 
-public class XSLTExeceute {
+public class XSLTExecute {
     /*public static void main(String[] args){
         try {
             TransformerFactory factory = TransformerFactory.newInstance();
@@ -21,8 +19,6 @@ public class XSLTExeceute {
     }*/
 
     public static void main(String args[]) throws Exception {
-        /*String[] arglist = {"-o:/home/danushka/Downloads/output1.xml","/home/danushka/Downloads/input1.xml", "/home/danushka/Downloads/output.xml"};
-        Transform.main(arglist);*/
         File xsltFile = new File("/home/danushka/Downloads/output.xml");
         File inputXml = new File("/home/danushka/Downloads/input1.xml");
 
