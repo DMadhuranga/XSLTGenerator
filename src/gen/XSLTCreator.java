@@ -35,16 +35,16 @@ public class XSLTCreator {
     private static final String MAX = "MAX";
 
 
-    //common
+    //common operators
     private static final String CONSTANT = "CONSTANT";
     private static final String GLOBAL_VARIABLE = "GLOBAL_VARIABLE";
     private static final String PROPERTIES = "PROPERTIES";
     private static final String COMPARE = "COMPARE";
 
-    //conditional
+    //conditional operators
     private static final String IF_ELSE = "IF_ELSE";
 
-    //string
+    //string operators
     private static final String CONCAT = "CONCAT";
     private static final String LOWERCASE = "LOWERCASE";
     private static final String UPPERCASE = "UPPERCASE";
@@ -57,21 +57,15 @@ public class XSLTCreator {
     private static final String MATCH = "MATCH";
     private static final String TRIM = "TRIM";
 
-    //type_conversion
+    //type_conversion operators
     private static final String TO_STRING = "TO_STRING";
     private static final String STRING_TO_NUMBER = "STRING_TO_NUMBER";
     private static final String STRING_TO_BOOLEAN = "STRING_TO_BOOLEAN";
 
-    //boolean
+    //boolean operators
     private static final String NOT = "NOT";
     private static final String AND = "AND";
     private static final String OR = "OR";
-
-    //private static int currentLevel = 0;
-    private static ArrayList<InPutNode> inPutNodes;
-    private static ArrayList<OutPutNode> outPutNodes;
-    private static InPutNode currentInNode;
-    private static ArrayList<OperatorNode> operatorNodes;
 
     //XML attributes
     private static final String NAME = "name";
@@ -89,13 +83,19 @@ public class XSLTCreator {
     private static final String AT_NODE = "/@node";
     private static final String AT_OPERATORS = "//@operators";
 
+
+    private static ArrayList<InPutNode> inPutNodes;
+    private static ArrayList<OutPutNode> outPutNodes;
+    private static InPutNode currentInNode;
+    private static ArrayList<OperatorNode> operatorNodes;
+
     public static void main(String[] args){
         transform("/home/danushka/Downloads/output.xml",
                 "/home/danushka/workspace/SampleFlowRegistry/NewConfig12.datamapper");
     }
 
-    private static void transform(String outputFilePath, String styleSheetFile){
-        ReadXMLFile inputXML = new ReadXMLFile(styleSheetFile);
+    private static void transform(String outputFilePath, String styleSheetFilePath){
+        ReadXMLFile inputXML = new ReadXMLFile(styleSheetFilePath);
         WriteXMLFile outputXML = new WriteXMLFile(outputFilePath);
         Element rootElement = outputXML.getDocument().createElement("xsl:stylesheet");
         rootElement.setAttribute("xmlns:xsl","http://www.w3.org/1999/XSL/Transform");
@@ -111,11 +111,11 @@ public class XSLTCreator {
         Element templateElement = outputXML.getDocument().createElement(XSL_TEMPLATE);
         templateElement.setAttribute("match","/");
         rootElement.appendChild(templateElement);
-        operatorNodes = createOperatorNodes(inputXML);
+        createOperatorNodes(inputXML);
         createInputNode(inputXML);
         createOutputNode(inputXML,outputXML, templateElement);
         for (OutPutNode outPutNode:outPutNodes) {
-            traverseOutPutNode(outPutNode,outputXML,rootElement,templateElement);
+            traverseOutPutNode(outPutNode,outputXML,templateElement);
         }
         outputXML.saveFile();
     }
@@ -174,18 +174,15 @@ public class XSLTCreator {
         }
     }
 
-    private static ArrayList<OperatorNode> createOperatorNodes(ReadXMLFile inputXMLFile){
-        ArrayList<OperatorNode> operatorNodes = new ArrayList<>();
+    private static void createOperatorNodes(ReadXMLFile inputXMLFile){
+        operatorNodes = new ArrayList<>();
         NodeList operators = inputXMLFile.getDocument().getElementsByTagName("operators");
         for(int i=0;i<operators.getLength();i++){
             operatorNodes.add(new OperatorNode(operators.item(i)));
         }
-        return operatorNodes;
     }
 
-    private static void traverseOutPutNode(OutPutNode node, WriteXMLFile outputXMLFile, Element rootElement,
-                                           Element parentElement){
-        //System.out.println(currentNode.getAttributes().getNamedItem("schemaDataType").getNodeValue());
+    private static void traverseOutPutNode(OutPutNode node, WriteXMLFile outputXMLFile, Element parentElement){
         if(node.getProperties().get(TYPE).equals(STRING_TYPE) || node.getProperties().get(TYPE).equals(NUMBER_TYPE) ||
                 node.getProperties().get(TYPE).equals(BOOLEAN_TYPE)){
             if(node.getInNode().getOutNodes().size()>0){
@@ -208,7 +205,7 @@ public class XSLTCreator {
                     forEachElement.appendChild(currentElement);
                     if (node.getProperty(ITEMS_TYPE).equals(OBJECT_TYPE)) {
                         for (OutPutNode childNode : node.getChildNodes()) {
-                            traverseOutPutNode(childNode, outputXMLFile, rootElement, currentElement);
+                            traverseOutPutNode(childNode, outputXMLFile, currentElement);
                         }
                     } else if (node.getInNode().getOutNodes().size() > 0) {
                         Element valueOfElement = outputXMLFile.getDocument().createElement(XSL_VALUE_OF);
@@ -228,7 +225,7 @@ public class XSLTCreator {
             Element currentElement = outputXMLFile.getDocument().createElement(node.getName());
             parentElement.appendChild(currentElement);
             for(OutPutNode childNode:node.getChildNodes()){
-                traverseOutPutNode(childNode,outputXMLFile,rootElement,currentElement);
+                traverseOutPutNode(childNode,outputXMLFile,currentElement);
             }
         }
     }
