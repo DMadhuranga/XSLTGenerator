@@ -1,22 +1,47 @@
+/*
+ * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package gen;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import org.w3c.dom.Node;
 
-public class OutPutNode extends XMLNode{
-    private String xPath;
+import static gen.XSLTGeneratorConstants.PROPERTIES_LOWER_CASE;
+import static gen.XSLTGeneratorConstants.KEY;
+import static gen.XSLTGeneratorConstants.VALUE;
+import static gen.XSLTGeneratorConstants.NODE;
+import static gen.XSLTGeneratorConstants.IN_NODE;
+import static gen.XSLTGeneratorConstants.NAME;
+/**
+ * This class represent a field in the output XML. Contains all the details of the field.
+ */
+class OutPutNode extends XMLNode{
+    private final String xPath;
 
     public InNode getInNode() {
         return inNode;
     }
 
     private InNode inNode;
-    private ArrayList<OutPutNode> childNodes;
-    private HashMap<String,String> properties;
+    private final ArrayList<OutPutNode> childNodes;
+    private final HashMap<String,String> properties;
 
     public OutPutNode(Node node, String parentXPath){
-        this.name = getAttribute(node,"name");
+        this.name = getAttribute(node,NAME);
         this.properties = new HashMap<>();
         this.childNodes = new ArrayList<>();
         if(parentXPath.equals("")){
@@ -47,15 +72,17 @@ public class OutPutNode extends XMLNode{
             Node childNode = node.getChildNodes().item(i);
             if (childNode.getAttributes() != null) {
                 switch (childNode.getNodeName()) {
-                    case "properties":
-                        this.properties.put(childNode.getAttributes().getNamedItem("key").getTextContent(), childNode.getAttributes().getNamedItem("value").getTextContent());
+                    case PROPERTIES_LOWER_CASE:
+                        this.properties.put(childNode.getAttributes().getNamedItem(KEY).getTextContent(), childNode.getAttributes().getNamedItem(VALUE).getTextContent());
                         break;
-                    case "node":
+                    case NODE:
                         this.childNodes.add(new OutPutNode(childNode, this.xPath));
                         break;
-                    case "inNode":
+                    case IN_NODE:
                         this.inNode = new InNode(childNode);
                         break;
+                    default:
+                        System.out.println(childNode.getNodeName());
                 }
             }
         }
