@@ -101,5 +101,6 @@ final class XSLTGeneratorConstants {
     public static final String RESULT_STRING = "resultString";
     public static final String EMPTY_STRING = "";
     public static final String DOT_SYMBOL = "\\.";
+    public static final String SLASH = "/";
 
 }

@@ -90,6 +90,8 @@ import static gen.XSLTGeneratorConstants.CONSTANT;
 import static gen.XSLTGeneratorConstants.TREE_NODE;
 import static gen.XSLTGeneratorConstants.MATCH;
 import static gen.XSLTGeneratorConstants.EMPTY_STRING;
+import static gen.XSLTGeneratorConstants.SLASH;
+import static gen.XSLTGeneratorConstants.DOT_SYMBOL;
 
 /**
  * This class handles the generation of XSLT stylesheet.
@@ -125,7 +127,7 @@ class XSLTCreator {
         outputXML.getDocument().appendChild(rootElement);
         setPrecisionFunction(rootElement, outputXML);
         Element templateElement = outputXML.getDocument().createElement(XSL_TEMPLATE);
-        templateElement.setAttribute(MATCH_LOWER_CASE, "/");
+        templateElement.setAttribute(MATCH_LOWER_CASE, SLASH);
         rootElement.appendChild(templateElement);
         createOperatorNodes(inputXML);
         createInputNode(inputXML);
@@ -318,7 +320,7 @@ class XSLTCreator {
                 if (path.toString().equals(EMPTY_STRING)) {
                     path = new StringBuilder(tempNode.getName());
                 } else {
-                    path.insert(0, tempNode.getName() + "/");
+                    path.insert(0, tempNode.getName() + SLASH);
                 }
                 tempNode = tempNode.getParentNode();
             }
@@ -337,7 +339,7 @@ class XSLTCreator {
      */
     private static String getValueFromMapping(String inNode) throws IndexOutOfBoundsException{
         if (isOperator(inNode)) {
-            String index = inNode.split("\\.")[1].split("/")[0];
+            String index = inNode.split(DOT_SYMBOL)[1].split(SLASH)[0];
             OperatorNode operatorNode = operatorNodes.get(Integer.parseInt(index));
             switch (operatorNode.getProperty(OPERATOR_TYPE)) {
                 case CONSTANT:
@@ -697,8 +699,8 @@ class XSLTCreator {
             }
         } else {
             int currentIndex = 1;
-            String[] atNodes = inNode.split("\\.");
-            InPutNode inPutNode = inPutNodes.get(Integer.parseInt(atNodes[currentIndex].split("/")[0]));
+            String[] atNodes = inNode.split(DOT_SYMBOL);
+            InPutNode inPutNode = inPutNodes.get(Integer.parseInt(atNodes[currentIndex].split(SLASH)[0]));
             String inNodeString = inNode.substring(inNode.indexOf(AT_NODE));
             InPutNode currentNode = inPutNode;
             StringBuilder path = new StringBuilder();
@@ -709,13 +711,13 @@ class XSLTCreator {
                     if (path.toString().equals(EMPTY_STRING)) {
                         path = new StringBuilder(currentNode.getName());
                     } else {
-                        path.append("/").append(currentNode.getName());
+                        path.append(SLASH).append(currentNode.getName());
                     }
                 }
                 if (currentInNode == currentNode) {
                     parentFound = true;
                 }
-                String nodeIndex = atNodes[currentIndex].split("/")[0];
+                String nodeIndex = atNodes[currentIndex].split(SLASH)[0];
                 currentNode = currentNode.getChildNodes().get(Integer.parseInt(nodeIndex));
                 inNodeString = inNodeString.substring(AT_NODE.length()+nodeIndex.length()+1);
             }
@@ -736,14 +738,14 @@ class XSLTCreator {
                     return currentNode.getName();
                 }
                 if (currentNode.getProperty(TYPE).equals(BOOLEAN_TYPE)) {
-                    return path + "/" + currentNode.getName() + " eq 'true' ";
+                    return path + SLASH + currentNode.getName() + " eq 'true' ";
                 } else if (currentNode.getProperty(TYPE).equals(NUMBER_TYPE)) {
-                    return "number( " + path + "/" + currentNode.getName() + " )";
+                    return "number( " + path + SLASH + currentNode.getName() + " )";
                 }
-                return path + "/" + currentNode.getName();
+                return path + SLASH + currentNode.getName();
             } else {
-                String[] cPathParts = currentInNode.getXPath().split("/");
-                String[] xPathParts = currentNode.getXPath().split("/");
+                String[] cPathParts = currentInNode.getXPath().split(SLASH);
+                String[] xPathParts = currentNode.getXPath().split(SLASH);
                 boolean matching = true;
                 if (!cPathParts[0].equals(xPathParts[0])) {
                     matching = false;
@@ -761,7 +763,7 @@ class XSLTCreator {
                     if (path.toString().equals(EMPTY_STRING)) {
                         path = new StringBuilder(s);
                     } else {
-                        path.append("/").append(s);
+                        path.append(SLASH).append(s);
                     }
                 }
                 for (String s : cPathParts) {
@@ -793,11 +795,11 @@ class XSLTCreator {
     }
 
     /**
-     * This method will traverse through the input tree and
+     * This method will traverse through the input tree and find the matching array for given output node
      *
-     * @param node          first element of the output XML file
-     * @param operatorNodes writeXML file responsible for writing the output file
-     * @return the name of the previous element if the element was an array element, null otherwise
+     * @param node array type output node
+     * @param operatorNodes operators array
+     * @return input node that maps to the given output node
      */
     private static InPutNode traverseArray(OutPutNode node, ArrayList<OperatorNode> operatorNodes) {
         ArrayList<InPutNode> arrayNodes = new ArrayList<>();
@@ -826,15 +828,15 @@ class XSLTCreator {
     }
 
     /**
-     * This method will set up the precision function in the output file
+     * This method evaluate given xPath and return the array type node
      *
-     * @param inNode        first element of the output XML file
-     * @param operatorNodes writeXML file responsible for writing the output file
-     * @return the name of the previous element if the element was an array element, null otherwise
+     * @param inNode xPath of the array type node
+     * @param operatorNodes operators array
+     * @return array type node matches the given xPath
      */
     private static InPutNode getArrayElement(String inNode, ArrayList<OperatorNode> operatorNodes) {
         if (isOperator(inNode)) {
-            OperatorNode operatorNode = operatorNodes.get(Integer.parseInt(inNode.substring(13, 14)));
+            OperatorNode operatorNode = operatorNodes.get(Integer.parseInt(inNode.split(DOT_SYMBOL)[1].split(SLASH)[0]));
             ArrayList<InPutNode> inNodes = new ArrayList<>();
             for (String childInNode : operatorNode.getLeftContainer().getInNodes()) {
                 InPutNode returnInNode = getArrayElement(childInNode, operatorNodes);
@@ -844,11 +846,16 @@ class XSLTCreator {
             }
             return getHighestLevelNode(inNodes);
         } else {
-            InPutNode currentNode = inPutNodes.get(Integer.parseInt(inNode.substring(19, 20)));
-            String inNodeString = substring(inNode, 20);
-            while (inNodeString.contains(AT_NODE)) {
-                currentNode = currentNode.getChildNodes().get(Integer.parseInt(inNodeString.substring(7, 8)));
-                inNodeString = substring(inNodeString, 8);
+            String[] nodes = inNode.split(DOT_SYMBOL);
+            int currentNodeIndex = 1;
+            String inputIndex = nodes[currentNodeIndex].split(SLASH)[0];
+            InPutNode currentNode = inPutNodes.get(Integer.parseInt(inputIndex));
+            String remainingInNodeString = inNode.substring(inNode.indexOf(AT_NODE));
+            while (remainingInNodeString.contains(AT_NODE)) {
+                currentNodeIndex++;
+                String indexOfChild = nodes[currentNodeIndex].split(SLASH)[0];
+                currentNode = currentNode.getChildNodes().get(Integer.parseInt(indexOfChild));
+                remainingInNodeString = remainingInNodeString.substring(indexOfChild.length()+1+AT_NODE.length());
             }
             while (!(currentNode.getProperty(TYPE).equals(ARRAY_TYPE) || currentNode.getParentNode() == null)) {
                 if (currentNode.getParentNode() != null) {
@@ -860,10 +867,10 @@ class XSLTCreator {
     }
 
     /**
-     * This method will set up the precision function in the output file
+     * This method finds the highest level array node in an array of nodes
      *
-     * @param arrayNodes first element of the output XML file
-     * @return the name of the previous element if the element was an array element, null otherwise
+     * @param arrayNodes array type input nodes
+     * @return the array type node in highest level
      */
     private static InPutNode getHighestLevelNode(ArrayList<InPutNode> arrayNodes) {
         int maxArray = 0;
@@ -879,10 +886,11 @@ class XSLTCreator {
     }
 
     /**
-     * This method will set up the precision function in the output file
+     * This method removes an element from a string array given the index
      *
-     * @param array      first element of the output XML file
-     * @param removedIdx writeXML file responsible for writing the output file
+     * @param array string array
+     * @param removedIdx index of the element
+     * @return return new array
      */
     private static String[] removeElementAt(String[] array, int removedIdx) {
         String[] newArray = new String[array.length - 1];
@@ -894,29 +902,6 @@ class XSLTCreator {
             }
         }
         return newArray;
-    }
-
-    /**
-     * This method will set up the precision function in the output file
-     *
-     * @param str   first element of the output XML file
-     * @param start writeXML file responsible for writing the output file
-     * @return the name of the previous element if the element was an array element, null otherwise
-     */
-    private static String substring(String str, int start) {
-        if (str == null) {
-            return null;
-        } else {
-            if (start < 0) {
-                start += str.length();
-            }
-
-            if (start < 0) {
-                start = 0;
-            }
-
-            return start > str.length() ? EMPTY_STRING : str.substring(start);
-        }
     }
 
 }
