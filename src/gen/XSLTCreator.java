@@ -26,7 +26,76 @@ import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static gen.XSLTGeneratorConstants.*;
+import static gen.XSLTGeneratorConstants.ABSOLUTE;
+import static gen.XSLTGeneratorConstants.ADD;
+import static gen.XSLTGeneratorConstants.AND;
+import static gen.XSLTGeneratorConstants.ARRAY_TYPE;
+import static gen.XSLTGeneratorConstants.AT_NODE;
+import static gen.XSLTGeneratorConstants.AT_OPERATORS;
+import static gen.XSLTGeneratorConstants.BOOLEAN_TYPE;
+import static gen.XSLTGeneratorConstants.CEILING;
+import static gen.XSLTGeneratorConstants.COMPARE;
+import static gen.XSLTGeneratorConstants.CONCAT;
+import static gen.XSLTGeneratorConstants.CONSTANT;
+import static gen.XSLTGeneratorConstants.DEFAULT_SCOPE;
+import static gen.XSLTGeneratorConstants.DIVIDE;
+import static gen.XSLTGeneratorConstants.DOT_SYMBOL;
+import static gen.XSLTGeneratorConstants.EMPTY_STRING;
+import static gen.XSLTGeneratorConstants.ENDS_WITH;
+import static gen.XSLTGeneratorConstants.FLOOR;
+import static gen.XSLTGeneratorConstants.GLOBAL_VARIABLE;
+import static gen.XSLTGeneratorConstants.IF_ELSE;
+import static gen.XSLTGeneratorConstants.INPUT;
+import static gen.XSLTGeneratorConstants.ITEMS_TYPE;
+import static gen.XSLTGeneratorConstants.LOWERCASE;
+import static gen.XSLTGeneratorConstants.MATCH;
+import static gen.XSLTGeneratorConstants.MATCH_LOWER_CASE;
+import static gen.XSLTGeneratorConstants.MAX;
+import static gen.XSLTGeneratorConstants.MIN;
+import static gen.XSLTGeneratorConstants.MULTIPLY;
+import static gen.XSLTGeneratorConstants.NAME;
+import static gen.XSLTGeneratorConstants.NOT;
+import static gen.XSLTGeneratorConstants.NUMBER_TYPE;
+import static gen.XSLTGeneratorConstants.OBJECT_TYPE;
+import static gen.XSLTGeneratorConstants.OPERATOR_TYPE;
+import static gen.XSLTGeneratorConstants.OR;
+import static gen.XSLTGeneratorConstants.OUTPUT;
+import static gen.XSLTGeneratorConstants.OWN_SET_PRECISION;
+import static gen.XSLTGeneratorConstants.PARAMETER_FILE_ROOT;
+import static gen.XSLTGeneratorConstants.PROPERTIES_UPPER_CASE;
+import static gen.XSLTGeneratorConstants.PROPERTY_OPERATOR;
+import static gen.XSLTGeneratorConstants.REPLACE;
+import static gen.XSLTGeneratorConstants.RESULT_STRING;
+import static gen.XSLTGeneratorConstants.ROUND;
+import static gen.XSLTGeneratorConstants.SCOPE;
+import static gen.XSLTGeneratorConstants.SELECT;
+import static gen.XSLTGeneratorConstants.SET_PRECISION;
+import static gen.XSLTGeneratorConstants.SLASH;
+import static gen.XSLTGeneratorConstants.SPLIT;
+import static gen.XSLTGeneratorConstants.STARTS_WITH;
+import static gen.XSLTGeneratorConstants.STRING_LENGTH;
+import static gen.XSLTGeneratorConstants.STRING_TO_BOOLEAN;
+import static gen.XSLTGeneratorConstants.STRING_TO_NUMBER;
+import static gen.XSLTGeneratorConstants.STRING_TYPE;
+import static gen.XSLTGeneratorConstants.SUBSTRING;
+import static gen.XSLTGeneratorConstants.SUBTRACT;
+import static gen.XSLTGeneratorConstants.TEST;
+import static gen.XSLTGeneratorConstants.TO_STRING;
+import static gen.XSLTGeneratorConstants.TREE_NODE;
+import static gen.XSLTGeneratorConstants.TRIM;
+import static gen.XSLTGeneratorConstants.TYPE;
+import static gen.XSLTGeneratorConstants.UPPERCASE;
+import static gen.XSLTGeneratorConstants.VERSION;
+import static gen.XSLTGeneratorConstants.XMLNS_OWN;
+import static gen.XSLTGeneratorConstants.XMLNS_XS;
+import static gen.XSLTGeneratorConstants.XMLNS_XSL;
+import static gen.XSLTGeneratorConstants.XSL_FOR_EACH;
+import static gen.XSLTGeneratorConstants.XSL_FUNCTION;
+import static gen.XSLTGeneratorConstants.XSL_IF;
+import static gen.XSLTGeneratorConstants.XSL_PARAM;
+import static gen.XSLTGeneratorConstants.XSL_STYLESHEET;
+import static gen.XSLTGeneratorConstants.XSL_TEMPLATE;
+import static gen.XSLTGeneratorConstants.XSL_VALUE_OF;
 
 /**
  * This class handles the generation of XSLT stylesheet.
@@ -42,7 +111,8 @@ class XSLTCreator {
             ParserConfigurationException,
             TransformerException {
         generateStyleSheet("/home/danushka/Downloads/output.xml",
-                "/home/danushka/workspace/SampleFlowRegistry/NewConfig.datamapper");
+                "/home/danushka/workspace/SampleFlowRegistry/NewConfig.datamapper",
+                "/home/danushka/Downloads/format.xml");
     }
 
     /**
@@ -51,9 +121,11 @@ class XSLTCreator {
      * @param styleSheetFilePath path of the file that needed to save the generated stylesheet
      * @param schemaFilePath     path of the datamapper schema file
      */
-    private static void generateStyleSheet(String styleSheetFilePath, String schemaFilePath)
+    private static void generateStyleSheet(String styleSheetFilePath, String schemaFilePath,
+                                           String parameterFilePath)
             throws SAXException, IOException, ParserConfigurationException, TransformerException {
         DataMapperSchemaProcessor inputXML = new DataMapperSchemaProcessor(schemaFilePath);
+        XSLTStyleSheetWriter parameterXML = new XSLTStyleSheetWriter(parameterFilePath);
         XSLTStyleSheetWriter outputXML = new XSLTStyleSheetWriter(styleSheetFilePath);
         Element rootElement = outputXML.getDocument().createElement(XSL_STYLESHEET);
         rootElement.setAttribute(XMLNS_XSL, "http://www.w3.org/1999/XSL/Transform");
@@ -62,16 +134,18 @@ class XSLTCreator {
         rootElement.setAttribute(XMLNS_OWN, "http://whatever");
         outputXML.getDocument().appendChild(rootElement);
         setPrecisionFunction(rootElement, outputXML);
+        createOperatorNodes(inputXML);
+        setPropertyOperators(outputXML,rootElement,parameterXML);
         Element templateElement = outputXML.getDocument().createElement(XSL_TEMPLATE);
         templateElement.setAttribute(MATCH_LOWER_CASE, SLASH);
         rootElement.appendChild(templateElement);
-        createOperatorNodes(inputXML);
         createInputNode(inputXML);
-        createOutputNode(inputXML, outputXML, templateElement);
+        createOutputNode(inputXML);
         for (OutPutNode outPutNode : outPutNodes) {
             traverseOutPutNode(outPutNode, outputXML, templateElement);
         }
         outputXML.saveFile();
+        parameterXML.saveFile();
     }
 
     /**
@@ -109,25 +183,10 @@ class XSLTCreator {
      * This method will travers the data mapper schema and create the output tree
      *
      * @param inputXMLFile    data mapper file that need to be traversed
-     * @param outputXMLFile   output XSLT stylesheet file
-     * @param templateElement main template element of the output XSLT stylesheet
      */
-    private static void createOutputNode(DataMapperSchemaProcessor inputXMLFile,
-                                         XSLTStyleSheetWriter outputXMLFile, Element
-                                                 templateElement) {
+    private static void createOutputNode(DataMapperSchemaProcessor inputXMLFile) {
         outPutNodes = new ArrayList<>();
         Node outputNode = inputXMLFile.getDocument().getElementsByTagName(OUTPUT).item(0);
-        for (OperatorNode operatorNode : operatorNodes) {
-            if (operatorNode.getProperty(OPERATOR_TYPE).equals(GLOBAL_VARIABLE)) {
-                Element v = outputXMLFile.getDocument().createElement(XSL_PARAM);
-                v.setAttribute(NAME, "operators." + Integer.toString(operatorNodes.indexOf
-                        (operatorNode)));
-                v.setAttribute("global_name", operatorNode.getProperty(NAME));
-                String defaultValue = operatorNode.getProperty("defaultValue");
-                v.setAttribute(SELECT, "'" + defaultValue + "'");
-                templateElement.appendChild(v);
-            }
-        }
         for (int i = 0; i < outputNode.getChildNodes().getLength(); i++) {
             if (outputNode.getChildNodes().item(i).getNodeName().equals(TREE_NODE)) {
                 outPutNodes.add(new OutPutNode(outputNode.getChildNodes().item(i), EMPTY_STRING));
@@ -161,6 +220,42 @@ class XSLTCreator {
         NodeList operators = inputXMLFile.getDocument().getElementsByTagName("operators");
         for (int i = 0; i < operators.getLength(); i++) {
             operatorNodes.add(new OperatorNode(operators.item(i)));
+        }
+    }
+
+    private static void setPropertyOperators(XSLTStyleSheetWriter outputXMLFile, Element
+            templateElement, XSLTStyleSheetWriter parameterXML){
+        Element rootElement = parameterXML.getDocument().createElement(PARAMETER_FILE_ROOT);
+        parameterXML.getDocument().appendChild(rootElement);
+        for (OperatorNode operatorNode : operatorNodes) {
+            switch (operatorNode.getProperty(OPERATOR_TYPE)){
+                case PROPERTIES_UPPER_CASE:
+                    Element propertyElementInParameterFile = parameterXML.getDocument()
+                            .createElement(PROPERTY_OPERATOR);
+                    Element propertyElement = outputXMLFile.getDocument().createElement(XSL_PARAM);
+                    if(operatorNode.getProperty(SCOPE)==null){
+                        propertyElement.setAttribute(NAME, operatorNode.getProperty(NAME));
+                        propertyElementInParameterFile.setAttribute(NAME,operatorNode.getProperty(NAME));
+                        propertyElementInParameterFile.setAttribute(SCOPE,DEFAULT_SCOPE);
+                    }else{
+                        propertyElement.setAttribute(NAME,operatorNode.getProperty(NAME));
+                        propertyElementInParameterFile.setAttribute(NAME,operatorNode.getProperty(NAME));
+                        propertyElementInParameterFile.setAttribute(SCOPE,operatorNode.getProperty(SCOPE));
+                    }
+                    templateElement.appendChild(propertyElement);
+                    rootElement.appendChild(propertyElementInParameterFile);
+                    break;
+
+            }
+            if (operatorNode.getProperty(OPERATOR_TYPE).equals(GLOBAL_VARIABLE)) {
+                Element v = outputXMLFile.getDocument().createElement(XSL_PARAM);
+                v.setAttribute(NAME, "operators." + Integer.toString(operatorNodes.indexOf
+                        (operatorNode)));
+                v.setAttribute("global_name", operatorNode.getProperty(NAME));
+                String defaultValue = operatorNode.getProperty("defaultValue");
+                v.setAttribute(SELECT, "'" + defaultValue + "'");
+                templateElement.appendChild(v);
+            }
         }
     }
 
@@ -505,7 +600,7 @@ class XSLTCreator {
                     return "$operators." + Integer.toString(operatorNodes.indexOf(operatorNode))
                             + EMPTY_STRING;
                 case PROPERTIES_UPPER_CASE:
-                    return EMPTY_STRING;
+                    return "$"+operatorNode.getProperty(NAME);
                 case COMPARE:
                     String comparisonOperator = operatorNode.getAttributes().get
                             ("comparisonOperator");

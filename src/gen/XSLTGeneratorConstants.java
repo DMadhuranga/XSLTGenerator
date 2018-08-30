@@ -33,7 +33,7 @@ final class XSLTGeneratorConstants {
     //common operators
     public static final String CONSTANT = "CONSTANT";
     public static final String GLOBAL_VARIABLE = "GLOBAL_VARIABLE";
-    public static final String PROPERTIES_UPPER_CASE = "PROPERTIES_UPPER_CASE";
+    public static final String PROPERTIES_UPPER_CASE = "PROPERTIES";
     public static final String COMPARE = "COMPARE";
 
     //conditional operators
@@ -102,5 +102,9 @@ final class XSLTGeneratorConstants {
     public static final String EMPTY_STRING = "";
     public static final String DOT_SYMBOL = "\\.";
     public static final String SLASH = "/";
+    public static final String SCOPE = "scope";
+    public static final String PARAMETER_FILE_ROOT= "operators";
+    public static final String PROPERTY_OPERATOR = "property_operator";
+    public static final String DEFAULT_SCOPE = "DEFAULT";
 
 }

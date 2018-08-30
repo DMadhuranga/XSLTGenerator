@@ -33,10 +33,13 @@ import java.io.File;
 class XSLTStyleSheetWriter {
     private Document document;
     private final String filePath;
+    private static DocumentBuilderFactory docFactory;
 
     public XSLTStyleSheetWriter(String filePath) throws ParserConfigurationException {
         this.filePath = filePath;
-        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+        if(docFactory==null){
+            docFactory = DocumentBuilderFactory.newInstance();
+        }
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
         document = docBuilder.newDocument();
     }

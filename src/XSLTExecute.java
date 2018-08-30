@@ -40,6 +40,7 @@ class XSLTExecute {
             String[] parts = args[i].split("=");
             trans.setParameter(parts[0], parts[1]);
         }
+        trans.setParameter("PROPERTIES","");
 
         trans.transform(xmlSource, result);
         File outputFile = new File("/home/danushka/Downloads/output1.xml");
