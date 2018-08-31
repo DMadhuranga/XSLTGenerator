@@ -71,6 +71,7 @@ final class XSLTGeneratorConstants {
     public static final String XSL_VALUE_OF = "xsl:value-of";
     public static final String XSL_PARAM = "xsl:param";
     public static final String XSL_IF = "xsl:if";
+    public static final String XSL_VARIABLE = "xsl:variable";
     public static final String XSL_FOR_EACH = "xsl:for-each";
     public static final String XSL_TEMPLATE = "xsl:template";
 
@@ -106,5 +107,13 @@ final class XSLTGeneratorConstants {
     public static final String PARAMETER_FILE_ROOT= "operators";
     public static final String PROPERTY_OPERATOR = "property_operator";
     public static final String DEFAULT_SCOPE = "DEFAULT";
+    public static final String DEFAULT_VALUE = "defaultValue";
+    public static final String DEFAULT_NAME= "defaultName";
+    public static final String CUSTOM_FUNCTION = "CUSTOM_FUNCTION";
+    public static final String FUNCTION_DEFINITION = "functionDefinition";
+    public static final String XSL_NAMESPACE_URI = "http://www.w3.org/1999/XSL/Transform";
+    public static final String XS_NAMESPACE_URI = "http://www.w3.org/2001/XMLSchema";
+    public static final String XSLT_VERSION = "2.0";
+    public static final String XSLT_FUNCTION_DECLARE_URI = "http://whatever";
 
 }

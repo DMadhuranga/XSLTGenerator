@@ -16,6 +16,7 @@
  */
 package gen;
 
+import jdk.nashorn.internal.runtime.regexp.joni.Regex;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -25,6 +26,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import static gen.XSLTGeneratorConstants.ABSOLUTE;
 import static gen.XSLTGeneratorConstants.ADD;
@@ -37,12 +40,16 @@ import static gen.XSLTGeneratorConstants.CEILING;
 import static gen.XSLTGeneratorConstants.COMPARE;
 import static gen.XSLTGeneratorConstants.CONCAT;
 import static gen.XSLTGeneratorConstants.CONSTANT;
+import static gen.XSLTGeneratorConstants.CUSTOM_FUNCTION;
+import static gen.XSLTGeneratorConstants.DEFAULT_NAME;
 import static gen.XSLTGeneratorConstants.DEFAULT_SCOPE;
+import static gen.XSLTGeneratorConstants.DEFAULT_VALUE;
 import static gen.XSLTGeneratorConstants.DIVIDE;
 import static gen.XSLTGeneratorConstants.DOT_SYMBOL;
 import static gen.XSLTGeneratorConstants.EMPTY_STRING;
 import static gen.XSLTGeneratorConstants.ENDS_WITH;
 import static gen.XSLTGeneratorConstants.FLOOR;
+import static gen.XSLTGeneratorConstants.FUNCTION_DEFINITION;
 import static gen.XSLTGeneratorConstants.GLOBAL_VARIABLE;
 import static gen.XSLTGeneratorConstants.IF_ELSE;
 import static gen.XSLTGeneratorConstants.INPUT;
@@ -89,13 +96,18 @@ import static gen.XSLTGeneratorConstants.VERSION;
 import static gen.XSLTGeneratorConstants.XMLNS_OWN;
 import static gen.XSLTGeneratorConstants.XMLNS_XS;
 import static gen.XSLTGeneratorConstants.XMLNS_XSL;
+import static gen.XSLTGeneratorConstants.XSLT_FUNCTION_DECLARE_URI;
+import static gen.XSLTGeneratorConstants.XSLT_VERSION;
 import static gen.XSLTGeneratorConstants.XSL_FOR_EACH;
 import static gen.XSLTGeneratorConstants.XSL_FUNCTION;
 import static gen.XSLTGeneratorConstants.XSL_IF;
+import static gen.XSLTGeneratorConstants.XSL_NAMESPACE_URI;
 import static gen.XSLTGeneratorConstants.XSL_PARAM;
 import static gen.XSLTGeneratorConstants.XSL_STYLESHEET;
 import static gen.XSLTGeneratorConstants.XSL_TEMPLATE;
 import static gen.XSLTGeneratorConstants.XSL_VALUE_OF;
+import static gen.XSLTGeneratorConstants.XSL_VARIABLE;
+import static gen.XSLTGeneratorConstants.XS_NAMESPACE_URI;
 
 /**
  * This class handles the generation of XSLT stylesheet.
@@ -106,6 +118,7 @@ class XSLTCreator {
     private static ArrayList<OutPutNode> outPutNodes;
     private static InPutNode currentInNode;
     private static ArrayList<OperatorNode> operatorNodes;
+    private static ArrayList<String> globalVariables;
 
     public static void main(String[] args) throws SAXException, IOException,
             ParserConfigurationException,
@@ -128,10 +141,7 @@ class XSLTCreator {
         XSLTStyleSheetWriter parameterXML = new XSLTStyleSheetWriter(parameterFilePath);
         XSLTStyleSheetWriter outputXML = new XSLTStyleSheetWriter(styleSheetFilePath);
         Element rootElement = outputXML.getDocument().createElement(XSL_STYLESHEET);
-        rootElement.setAttribute(XMLNS_XSL, "http://www.w3.org/1999/XSL/Transform");
-        rootElement.setAttribute(XMLNS_XS, "http://www.w3.org/2001/XMLSchema");
-        rootElement.setAttribute(VERSION, "2.0");
-        rootElement.setAttribute(XMLNS_OWN, "http://whatever");
+        setXSLURIs(rootElement);
         outputXML.getDocument().appendChild(rootElement);
         setPrecisionFunction(rootElement, outputXML);
         createOperatorNodes(inputXML);
@@ -217,6 +227,7 @@ class XSLTCreator {
      */
     private static void createOperatorNodes(DataMapperSchemaProcessor inputXMLFile) {
         operatorNodes = new ArrayList<>();
+        globalVariables = new ArrayList<>();
         NodeList operators = inputXMLFile.getDocument().getElementsByTagName("operators");
         for (int i = 0; i < operators.getLength(); i++) {
             operatorNodes.add(new OperatorNode(operators.item(i)));
@@ -245,16 +256,22 @@ class XSLTCreator {
                     templateElement.appendChild(propertyElement);
                     rootElement.appendChild(propertyElementInParameterFile);
                     break;
+                case GLOBAL_VARIABLE:
+                    Element globalVariableElement = outputXMLFile.getDocument().createElement(XSL_VARIABLE);
+                    if(operatorNode.getProperty(NAME)==null){
+                        globalVariables.add(DEFAULT_NAME);
+                        globalVariableElement.setAttribute(NAME, DEFAULT_NAME);
+                    }else{
+                        globalVariables.add(operatorNode.getProperty(NAME));
+                        globalVariableElement.setAttribute(NAME, operatorNode.getProperty(NAME));
+                    }
+                    if(operatorNode.getProperty(DEFAULT_VALUE)!=null){
+                        globalVariableElement.setAttribute(SELECT, operatorNode.getProperty
+                                (DEFAULT_VALUE));
+                    }
+                    templateElement.appendChild(globalVariableElement);
+                    break;
 
-            }
-            if (operatorNode.getProperty(OPERATOR_TYPE).equals(GLOBAL_VARIABLE)) {
-                Element v = outputXMLFile.getDocument().createElement(XSL_PARAM);
-                v.setAttribute(NAME, "operators." + Integer.toString(operatorNodes.indexOf
-                        (operatorNode)));
-                v.setAttribute("global_name", operatorNode.getProperty(NAME));
-                String defaultValue = operatorNode.getProperty("defaultValue");
-                v.setAttribute(SELECT, "'" + defaultValue + "'");
-                templateElement.appendChild(v);
             }
         }
     }
@@ -597,8 +614,10 @@ class XSLTCreator {
                     }
                     break;
                 case GLOBAL_VARIABLE:
-                    return "$operators." + Integer.toString(operatorNodes.indexOf(operatorNode))
-                            + EMPTY_STRING;
+                    if(operatorNode.getProperty(NAME)==null){
+                        return "$" + DEFAULT_NAME;
+                    }
+                    return "$" + operatorNode.getProperty(NAME);
                 case PROPERTIES_UPPER_CASE:
                     return "$"+operatorNode.getProperty(NAME);
                 case COMPARE:
@@ -784,6 +803,32 @@ class XSLTCreator {
                                 ().get(2)) + ")";
                     }
                     break;
+                case CUSTOM_FUNCTION:
+                    if(operatorNode.getProperty(FUNCTION_DEFINITION)!=null){
+                        String functionDefinition = operatorNode.getProperty(FUNCTION_DEFINITION);
+                        Map<String,String> replaceParas = new HashMap<>();
+                        String[] parameters = functionDefinition.split("[\\(\\)]")[1].split("[\\)\\)]")[0].split
+                                (",");
+                        if(parameters.length==operatorNode.getLeftContainer().getInNodes().size()) {
+                            for (int i = 0; i < operatorNode.getLeftContainer().getInNodes().size(); i++) {
+                                replaceParas.put(parameters[i], getValueFromMapping(operatorNode.getLeftContainer()
+                                        .getInNodes().get(i)));
+                            }
+                        }
+                        functionDefinition = functionDefinition.substring(functionDefinition
+                                        .indexOf("(",functionDefinition.indexOf("(")+1)+1,
+                                functionDefinition
+                                .lastIndexOf(")"));
+                        for (String key: replaceParas.keySet()) {
+                            functionDefinition = functionDefinition.replaceAll(key,replaceParas.get
+                                    (key));
+                        }
+                        for(String variable: globalVariables){
+                            functionDefinition = functionDefinition.replaceAll(variable,
+                                    "\\$"+variable);
+                        }
+                        return functionDefinition;
+                    }
 
             }
         } else {
@@ -996,6 +1041,18 @@ class XSLTCreator {
             }
         }
         return newArray;
+    }
+
+    /**
+     * This methods set up the xsl uris in the XSLT stylesheet file
+     *
+     * @param rootElement root element of the output XSLT stylesheet
+     */
+    private static void setXSLURIs(Element rootElement){
+        rootElement.setAttribute(XMLNS_XSL, XSL_NAMESPACE_URI);
+        rootElement.setAttribute(XMLNS_XS, XS_NAMESPACE_URI);
+        rootElement.setAttribute(VERSION, XSLT_VERSION);
+        rootElement.setAttribute(XMLNS_OWN, XSLT_FUNCTION_DECLARE_URI);
     }
 
 }
