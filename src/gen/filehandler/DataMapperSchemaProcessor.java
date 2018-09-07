@@ -14,7 +14,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package gen;
+package gen.filehandler;
 
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -29,7 +29,7 @@ import java.io.IOException;
 /**
  * This class handles reading of the data mapper schema file.
  */
-class DataMapperSchemaProcessor {
+public class DataMapperSchemaProcessor {
     private final String filePath;
     private Document document;
 

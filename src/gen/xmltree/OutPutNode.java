@@ -14,22 +14,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package gen;
+package gen.xmltree;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
 import org.w3c.dom.Node;
 
-import static gen.XSLTGeneratorConstants.PROPERTIES_LOWER_CASE;
-import static gen.XSLTGeneratorConstants.KEY;
-import static gen.XSLTGeneratorConstants.VALUE;
-import static gen.XSLTGeneratorConstants.NODE;
-import static gen.XSLTGeneratorConstants.IN_NODE;
-import static gen.XSLTGeneratorConstants.NAME;
+import static gen.config.XSLTGeneratorConstants.PROPERTIES_LOWER_CASE;
+import static gen.config.XSLTGeneratorConstants.KEY;
+import static gen.config.XSLTGeneratorConstants.VALUE;
+import static gen.config.XSLTGeneratorConstants.NODE;
+import static gen.config.XSLTGeneratorConstants.IN_NODE;
+import static gen.config.XSLTGeneratorConstants.NAME;
 /**
  * This class represent a field in the output XML. Contains all the details of the field.
  */
-class OutPutNode extends XMLNode{
+public class OutPutNode extends XMLNode{
     private final String xPath;
 
     public InNode getInNode() {

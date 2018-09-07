@@ -14,12 +14,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package gen;
+package gen.xmltree;
 
 import org.w3c.dom.Node;
 
-import static gen.XSLTGeneratorConstants.NODE;
-import static gen.XSLTGeneratorConstants.TREE_NODE;
+import static gen.config.XSLTGeneratorConstants.NODE;
+import static gen.config.XSLTGeneratorConstants.TREE_NODE;
 /**
  * This class represent a field in the input XML or output XML.
  */

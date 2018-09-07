@@ -1,6 +1,6 @@
-package gen;
+package gen.config;
 
-final class XSLTGeneratorConstants {
+public final class XSLTGeneratorConstants {
 
     private XSLTGeneratorConstants(){}
     //constants
@@ -74,6 +74,7 @@ final class XSLTGeneratorConstants {
     public static final String XSL_VARIABLE = "xsl:variable";
     public static final String XSL_FOR_EACH = "xsl:for-each";
     public static final String XSL_TEMPLATE = "xsl:template";
+    public static final String XSLT_COMMENT = "xsl:comment";
 
     //node types
     public static final String AT_NODE = "/@node";
@@ -115,5 +116,8 @@ final class XSLTGeneratorConstants {
     public static final String XS_NAMESPACE_URI = "http://www.w3.org/2001/XMLSchema";
     public static final String XSLT_VERSION = "2.0";
     public static final String XSLT_FUNCTION_DECLARE_URI = "http://whatever";
+    public static final String RUN_TIME_PROPERTIES = "xmlns:runTimeProperties";
+    public static final String EXTENSION_ELEMENT_PREFIXES = "extension-element-prefixes";
+    public static final String EXTENSION_ELEMENT_PREFIXES_VALUES = "xs own runTimeProperties";
 
 }

@@ -16,7 +16,11 @@
  */
 package gen;
 
-import jdk.nashorn.internal.runtime.regexp.joni.Regex;
+import gen.filehandler.DataMapperSchemaProcessor;
+import gen.filehandler.XSLTStyleSheetWriter;
+import gen.xmltree.InPutNode;
+import gen.xmltree.OperatorNode;
+import gen.xmltree.OutPutNode;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -29,85 +33,89 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import static gen.XSLTGeneratorConstants.ABSOLUTE;
-import static gen.XSLTGeneratorConstants.ADD;
-import static gen.XSLTGeneratorConstants.AND;
-import static gen.XSLTGeneratorConstants.ARRAY_TYPE;
-import static gen.XSLTGeneratorConstants.AT_NODE;
-import static gen.XSLTGeneratorConstants.AT_OPERATORS;
-import static gen.XSLTGeneratorConstants.BOOLEAN_TYPE;
-import static gen.XSLTGeneratorConstants.CEILING;
-import static gen.XSLTGeneratorConstants.COMPARE;
-import static gen.XSLTGeneratorConstants.CONCAT;
-import static gen.XSLTGeneratorConstants.CONSTANT;
-import static gen.XSLTGeneratorConstants.CUSTOM_FUNCTION;
-import static gen.XSLTGeneratorConstants.DEFAULT_NAME;
-import static gen.XSLTGeneratorConstants.DEFAULT_SCOPE;
-import static gen.XSLTGeneratorConstants.DEFAULT_VALUE;
-import static gen.XSLTGeneratorConstants.DIVIDE;
-import static gen.XSLTGeneratorConstants.DOT_SYMBOL;
-import static gen.XSLTGeneratorConstants.EMPTY_STRING;
-import static gen.XSLTGeneratorConstants.ENDS_WITH;
-import static gen.XSLTGeneratorConstants.FLOOR;
-import static gen.XSLTGeneratorConstants.FUNCTION_DEFINITION;
-import static gen.XSLTGeneratorConstants.GLOBAL_VARIABLE;
-import static gen.XSLTGeneratorConstants.IF_ELSE;
-import static gen.XSLTGeneratorConstants.INPUT;
-import static gen.XSLTGeneratorConstants.ITEMS_TYPE;
-import static gen.XSLTGeneratorConstants.LOWERCASE;
-import static gen.XSLTGeneratorConstants.MATCH;
-import static gen.XSLTGeneratorConstants.MATCH_LOWER_CASE;
-import static gen.XSLTGeneratorConstants.MAX;
-import static gen.XSLTGeneratorConstants.MIN;
-import static gen.XSLTGeneratorConstants.MULTIPLY;
-import static gen.XSLTGeneratorConstants.NAME;
-import static gen.XSLTGeneratorConstants.NOT;
-import static gen.XSLTGeneratorConstants.NUMBER_TYPE;
-import static gen.XSLTGeneratorConstants.OBJECT_TYPE;
-import static gen.XSLTGeneratorConstants.OPERATOR_TYPE;
-import static gen.XSLTGeneratorConstants.OR;
-import static gen.XSLTGeneratorConstants.OUTPUT;
-import static gen.XSLTGeneratorConstants.OWN_SET_PRECISION;
-import static gen.XSLTGeneratorConstants.PARAMETER_FILE_ROOT;
-import static gen.XSLTGeneratorConstants.PROPERTIES_UPPER_CASE;
-import static gen.XSLTGeneratorConstants.PROPERTY_OPERATOR;
-import static gen.XSLTGeneratorConstants.REPLACE;
-import static gen.XSLTGeneratorConstants.RESULT_STRING;
-import static gen.XSLTGeneratorConstants.ROUND;
-import static gen.XSLTGeneratorConstants.SCOPE;
-import static gen.XSLTGeneratorConstants.SELECT;
-import static gen.XSLTGeneratorConstants.SET_PRECISION;
-import static gen.XSLTGeneratorConstants.SLASH;
-import static gen.XSLTGeneratorConstants.SPLIT;
-import static gen.XSLTGeneratorConstants.STARTS_WITH;
-import static gen.XSLTGeneratorConstants.STRING_LENGTH;
-import static gen.XSLTGeneratorConstants.STRING_TO_BOOLEAN;
-import static gen.XSLTGeneratorConstants.STRING_TO_NUMBER;
-import static gen.XSLTGeneratorConstants.STRING_TYPE;
-import static gen.XSLTGeneratorConstants.SUBSTRING;
-import static gen.XSLTGeneratorConstants.SUBTRACT;
-import static gen.XSLTGeneratorConstants.TEST;
-import static gen.XSLTGeneratorConstants.TO_STRING;
-import static gen.XSLTGeneratorConstants.TREE_NODE;
-import static gen.XSLTGeneratorConstants.TRIM;
-import static gen.XSLTGeneratorConstants.TYPE;
-import static gen.XSLTGeneratorConstants.UPPERCASE;
-import static gen.XSLTGeneratorConstants.VERSION;
-import static gen.XSLTGeneratorConstants.XMLNS_OWN;
-import static gen.XSLTGeneratorConstants.XMLNS_XS;
-import static gen.XSLTGeneratorConstants.XMLNS_XSL;
-import static gen.XSLTGeneratorConstants.XSLT_FUNCTION_DECLARE_URI;
-import static gen.XSLTGeneratorConstants.XSLT_VERSION;
-import static gen.XSLTGeneratorConstants.XSL_FOR_EACH;
-import static gen.XSLTGeneratorConstants.XSL_FUNCTION;
-import static gen.XSLTGeneratorConstants.XSL_IF;
-import static gen.XSLTGeneratorConstants.XSL_NAMESPACE_URI;
-import static gen.XSLTGeneratorConstants.XSL_PARAM;
-import static gen.XSLTGeneratorConstants.XSL_STYLESHEET;
-import static gen.XSLTGeneratorConstants.XSL_TEMPLATE;
-import static gen.XSLTGeneratorConstants.XSL_VALUE_OF;
-import static gen.XSLTGeneratorConstants.XSL_VARIABLE;
-import static gen.XSLTGeneratorConstants.XS_NAMESPACE_URI;
+import static gen.config.XSLTGeneratorConstants.ABSOLUTE;
+import static gen.config.XSLTGeneratorConstants.ADD;
+import static gen.config.XSLTGeneratorConstants.AND;
+import static gen.config.XSLTGeneratorConstants.ARRAY_TYPE;
+import static gen.config.XSLTGeneratorConstants.AT_NODE;
+import static gen.config.XSLTGeneratorConstants.AT_OPERATORS;
+import static gen.config.XSLTGeneratorConstants.BOOLEAN_TYPE;
+import static gen.config.XSLTGeneratorConstants.CEILING;
+import static gen.config.XSLTGeneratorConstants.COMPARE;
+import static gen.config.XSLTGeneratorConstants.CONCAT;
+import static gen.config.XSLTGeneratorConstants.CONSTANT;
+import static gen.config.XSLTGeneratorConstants.CUSTOM_FUNCTION;
+import static gen.config.XSLTGeneratorConstants.DEFAULT_NAME;
+import static gen.config.XSLTGeneratorConstants.DEFAULT_SCOPE;
+import static gen.config.XSLTGeneratorConstants.DEFAULT_VALUE;
+import static gen.config.XSLTGeneratorConstants.DIVIDE;
+import static gen.config.XSLTGeneratorConstants.DOT_SYMBOL;
+import static gen.config.XSLTGeneratorConstants.EMPTY_STRING;
+import static gen.config.XSLTGeneratorConstants.ENDS_WITH;
+import static gen.config.XSLTGeneratorConstants.EXTENSION_ELEMENT_PREFIXES;
+import static gen.config.XSLTGeneratorConstants.EXTENSION_ELEMENT_PREFIXES_VALUES;
+import static gen.config.XSLTGeneratorConstants.FLOOR;
+import static gen.config.XSLTGeneratorConstants.FUNCTION_DEFINITION;
+import static gen.config.XSLTGeneratorConstants.GLOBAL_VARIABLE;
+import static gen.config.XSLTGeneratorConstants.IF_ELSE;
+import static gen.config.XSLTGeneratorConstants.INPUT;
+import static gen.config.XSLTGeneratorConstants.ITEMS_TYPE;
+import static gen.config.XSLTGeneratorConstants.LOWERCASE;
+import static gen.config.XSLTGeneratorConstants.MATCH;
+import static gen.config.XSLTGeneratorConstants.MATCH_LOWER_CASE;
+import static gen.config.XSLTGeneratorConstants.MAX;
+import static gen.config.XSLTGeneratorConstants.MIN;
+import static gen.config.XSLTGeneratorConstants.MULTIPLY;
+import static gen.config.XSLTGeneratorConstants.NAME;
+import static gen.config.XSLTGeneratorConstants.NOT;
+import static gen.config.XSLTGeneratorConstants.NUMBER_TYPE;
+import static gen.config.XSLTGeneratorConstants.OBJECT_TYPE;
+import static gen.config.XSLTGeneratorConstants.OPERATOR_TYPE;
+import static gen.config.XSLTGeneratorConstants.OR;
+import static gen.config.XSLTGeneratorConstants.OUTPUT;
+import static gen.config.XSLTGeneratorConstants.OWN_SET_PRECISION;
+import static gen.config.XSLTGeneratorConstants.PARAMETER_FILE_ROOT;
+import static gen.config.XSLTGeneratorConstants.PROPERTIES_UPPER_CASE;
+import static gen.config.XSLTGeneratorConstants.PROPERTY_OPERATOR;
+import static gen.config.XSLTGeneratorConstants.REPLACE;
+import static gen.config.XSLTGeneratorConstants.RESULT_STRING;
+import static gen.config.XSLTGeneratorConstants.ROUND;
+import static gen.config.XSLTGeneratorConstants.RUN_TIME_PROPERTIES;
+import static gen.config.XSLTGeneratorConstants.SCOPE;
+import static gen.config.XSLTGeneratorConstants.SELECT;
+import static gen.config.XSLTGeneratorConstants.SET_PRECISION;
+import static gen.config.XSLTGeneratorConstants.SLASH;
+import static gen.config.XSLTGeneratorConstants.SPLIT;
+import static gen.config.XSLTGeneratorConstants.STARTS_WITH;
+import static gen.config.XSLTGeneratorConstants.STRING_LENGTH;
+import static gen.config.XSLTGeneratorConstants.STRING_TO_BOOLEAN;
+import static gen.config.XSLTGeneratorConstants.STRING_TO_NUMBER;
+import static gen.config.XSLTGeneratorConstants.STRING_TYPE;
+import static gen.config.XSLTGeneratorConstants.SUBSTRING;
+import static gen.config.XSLTGeneratorConstants.SUBTRACT;
+import static gen.config.XSLTGeneratorConstants.TEST;
+import static gen.config.XSLTGeneratorConstants.TO_STRING;
+import static gen.config.XSLTGeneratorConstants.TREE_NODE;
+import static gen.config.XSLTGeneratorConstants.TRIM;
+import static gen.config.XSLTGeneratorConstants.TYPE;
+import static gen.config.XSLTGeneratorConstants.UPPERCASE;
+import static gen.config.XSLTGeneratorConstants.VERSION;
+import static gen.config.XSLTGeneratorConstants.XMLNS_OWN;
+import static gen.config.XSLTGeneratorConstants.XMLNS_XS;
+import static gen.config.XSLTGeneratorConstants.XMLNS_XSL;
+import static gen.config.XSLTGeneratorConstants.XSLT_COMMENT;
+import static gen.config.XSLTGeneratorConstants.XSLT_FUNCTION_DECLARE_URI;
+import static gen.config.XSLTGeneratorConstants.XSLT_VERSION;
+import static gen.config.XSLTGeneratorConstants.XSL_FOR_EACH;
+import static gen.config.XSLTGeneratorConstants.XSL_FUNCTION;
+import static gen.config.XSLTGeneratorConstants.XSL_IF;
+import static gen.config.XSLTGeneratorConstants.XSL_NAMESPACE_URI;
+import static gen.config.XSLTGeneratorConstants.XSL_PARAM;
+import static gen.config.XSLTGeneratorConstants.XSL_STYLESHEET;
+import static gen.config.XSLTGeneratorConstants.XSL_TEMPLATE;
+import static gen.config.XSLTGeneratorConstants.XSL_VALUE_OF;
+import static gen.config.XSLTGeneratorConstants.XSL_VARIABLE;
+import static gen.config.XSLTGeneratorConstants.XS_NAMESPACE_URI;
 
 /**
  * This class handles the generation of XSLT stylesheet.
@@ -124,8 +132,7 @@ class XSLTCreator {
             ParserConfigurationException,
             TransformerException {
         generateStyleSheet("/home/danushka/Downloads/output.xml",
-                "/home/danushka/workspace/SampleFlowRegistry/NewConfig.datamapper",
-                "/home/danushka/Downloads/format.xml");
+                "/home/danushka/workspace/SampleFlowRegistry/NewConfig12.datamapper");
     }
 
     /**
@@ -134,18 +141,16 @@ class XSLTCreator {
      * @param styleSheetFilePath path of the file that needed to save the generated stylesheet
      * @param schemaFilePath     path of the datamapper schema file
      */
-    private static void generateStyleSheet(String styleSheetFilePath, String schemaFilePath,
-                                           String parameterFilePath)
+    private static void generateStyleSheet(String styleSheetFilePath, String schemaFilePath)
             throws SAXException, IOException, ParserConfigurationException, TransformerException {
         DataMapperSchemaProcessor inputXML = new DataMapperSchemaProcessor(schemaFilePath);
-        XSLTStyleSheetWriter parameterXML = new XSLTStyleSheetWriter(parameterFilePath);
         XSLTStyleSheetWriter outputXML = new XSLTStyleSheetWriter(styleSheetFilePath);
         Element rootElement = outputXML.getDocument().createElement(XSL_STYLESHEET);
         setXSLURIs(rootElement);
         outputXML.getDocument().appendChild(rootElement);
         setPrecisionFunction(rootElement, outputXML);
         createOperatorNodes(inputXML);
-        setPropertyOperators(outputXML,rootElement,parameterXML);
+        setPropertyOperators(outputXML,rootElement);
         Element templateElement = outputXML.getDocument().createElement(XSL_TEMPLATE);
         templateElement.setAttribute(MATCH_LOWER_CASE, SLASH);
         rootElement.appendChild(templateElement);
@@ -155,7 +160,6 @@ class XSLTCreator {
             traverseOutPutNode(outPutNode, outputXML, templateElement);
         }
         outputXML.saveFile();
-        parameterXML.saveFile();
     }
 
     /**
@@ -235,26 +239,27 @@ class XSLTCreator {
     }
 
     private static void setPropertyOperators(XSLTStyleSheetWriter outputXMLFile, Element
-            templateElement, XSLTStyleSheetWriter parameterXML){
-        Element rootElement = parameterXML.getDocument().createElement(PARAMETER_FILE_ROOT);
-        parameterXML.getDocument().appendChild(rootElement);
+            templateElement){
+        String propertyOperatorString = EMPTY_STRING;
         for (OperatorNode operatorNode : operatorNodes) {
             switch (operatorNode.getProperty(OPERATOR_TYPE)){
                 case PROPERTIES_UPPER_CASE:
-                    Element propertyElementInParameterFile = parameterXML.getDocument()
-                            .createElement(PROPERTY_OPERATOR);
                     Element propertyElement = outputXMLFile.getDocument().createElement(XSL_PARAM);
+                    String propertyName = operatorNode.getProperty(NAME);
+                    String scope = operatorNode.getProperty(SCOPE);
+                    if(propertyName==null){
+                        propertyName = DEFAULT_NAME;
+                    }
                     if(operatorNode.getProperty(SCOPE)==null){
-                        propertyElement.setAttribute(NAME, operatorNode.getProperty(NAME));
-                        propertyElementInParameterFile.setAttribute(NAME,operatorNode.getProperty(NAME));
-                        propertyElementInParameterFile.setAttribute(SCOPE,DEFAULT_SCOPE);
+                        scope = DEFAULT_SCOPE;
+                    }
+                    propertyElement.setAttribute(NAME, propertyName);
+                    if(EMPTY_STRING.equals(propertyOperatorString)){
+                        propertyOperatorString+=propertyName+","+scope;
                     }else{
-                        propertyElement.setAttribute(NAME,operatorNode.getProperty(NAME));
-                        propertyElementInParameterFile.setAttribute(NAME,operatorNode.getProperty(NAME));
-                        propertyElementInParameterFile.setAttribute(SCOPE,operatorNode.getProperty(SCOPE));
+                        propertyOperatorString+=","+propertyName+","+scope;
                     }
                     templateElement.appendChild(propertyElement);
-                    rootElement.appendChild(propertyElementInParameterFile);
                     break;
                 case GLOBAL_VARIABLE:
                     Element globalVariableElement = outputXMLFile.getDocument().createElement(XSL_VARIABLE);
@@ -274,6 +279,7 @@ class XSLTCreator {
 
             }
         }
+        templateElement.setAttribute(RUN_TIME_PROPERTIES,propertyOperatorString);
     }
 
     /**
@@ -619,6 +625,9 @@ class XSLTCreator {
                     }
                     return "$" + operatorNode.getProperty(NAME);
                 case PROPERTIES_UPPER_CASE:
+                    if(operatorNode.getProperty(NAME)==null){
+                      return "$"+DEFAULT_NAME;
+                    }
                     return "$"+operatorNode.getProperty(NAME);
                 case COMPARE:
                     String comparisonOperator = operatorNode.getAttributes().get
@@ -1053,6 +1062,7 @@ class XSLTCreator {
         rootElement.setAttribute(XMLNS_XS, XS_NAMESPACE_URI);
         rootElement.setAttribute(VERSION, XSLT_VERSION);
         rootElement.setAttribute(XMLNS_OWN, XSLT_FUNCTION_DECLARE_URI);
+        rootElement.setAttribute(EXTENSION_ELEMENT_PREFIXES, EXTENSION_ELEMENT_PREFIXES_VALUES);
     }
 
 }

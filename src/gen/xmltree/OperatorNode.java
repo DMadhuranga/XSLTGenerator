@@ -14,18 +14,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package gen;
+package gen.xmltree;
 
 import java.util.HashMap;
 import org.w3c.dom.Node;
 
-import static gen.XSLTGeneratorConstants.LEFT_CONTAINER;
-import static gen.XSLTGeneratorConstants.BASIC_CONTAINER;
+import static gen.config.XSLTGeneratorConstants.LEFT_CONTAINER;
+import static gen.config.XSLTGeneratorConstants.BASIC_CONTAINER;
 
 /**
  * This class represent an operator used in the mapping. Contains all the details of the operator.
  */
-class OperatorNode {
+public class OperatorNode {
     private final HashMap<String,String> attributes;
     private LeftContainer leftContainer;
 

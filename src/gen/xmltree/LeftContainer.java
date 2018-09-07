@@ -14,15 +14,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package gen;
+package gen.xmltree;
 
 import java.util.ArrayList;
 import org.w3c.dom.Node;
 
-import static gen.XSLTGeneratorConstants.LEFT_CONNECTORS;
-import static gen.XSLTGeneratorConstants.IN_NODE;
-import static gen.XSLTGeneratorConstants.OUT_NODE;
-import static gen.XSLTGeneratorConstants.INCOMING_LINK;
+import static gen.config.XSLTGeneratorConstants.LEFT_CONNECTORS;
+import static gen.config.XSLTGeneratorConstants.IN_NODE;
+import static gen.config.XSLTGeneratorConstants.OUT_NODE;
+import static gen.config.XSLTGeneratorConstants.INCOMING_LINK;
 
 public class LeftContainer {
     private final ArrayList<String> inNodes;

@@ -14,7 +14,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package gen;
+package gen.filehandler;
 
 import org.w3c.dom.Document;
 import javax.xml.parsers.DocumentBuilder;
@@ -30,10 +30,10 @@ import java.io.File;
 /**
  * This class handles writing of the generated XSLT stylesheet.
  */
-class XSLTStyleSheetWriter {
+public class XSLTStyleSheetWriter {
     private Document document;
     private final String filePath;
-    private static DocumentBuilderFactory docFactory;
+    private DocumentBuilderFactory docFactory;
 
     public XSLTStyleSheetWriter(String filePath) throws ParserConfigurationException {
         this.filePath = filePath;
