@@ -74,7 +74,6 @@ public final class XSLTGeneratorConstants {
     public static final String XSL_VARIABLE = "xsl:variable";
     public static final String XSL_FOR_EACH = "xsl:for-each";
     public static final String XSL_TEMPLATE = "xsl:template";
-    public static final String XSLT_COMMENT = "xsl:comment";
     public static final String XSL_ATTRIBUTE = "xsl:attribute";
 
     //node types
@@ -107,8 +106,6 @@ public final class XSLTGeneratorConstants {
     public static final String DOT_SYMBOL = "\\.";
     public static final String SLASH = "/";
     public static final String SCOPE = "scope";
-    public static final String PARAMETER_FILE_ROOT= "operators";
-    public static final String PROPERTY_OPERATOR = "property_operator";
     public static final String DEFAULT_SCOPE = "DEFAULT";
     public static final String DEFAULT_VALUE = "defaultValue";
     public static final String DEFAULT_NAME= "defaultName";
