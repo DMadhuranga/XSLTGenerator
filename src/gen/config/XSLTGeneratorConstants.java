@@ -75,6 +75,7 @@ public final class XSLTGeneratorConstants {
     public static final String XSL_FOR_EACH = "xsl:for-each";
     public static final String XSL_TEMPLATE = "xsl:template";
     public static final String XSLT_COMMENT = "xsl:comment";
+    public static final String XSL_ATTRIBUTE = "xsl:attribute";
 
     //node types
     public static final String AT_NODE = "/@node";

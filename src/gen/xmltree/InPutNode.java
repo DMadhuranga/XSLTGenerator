@@ -92,9 +92,4 @@ public class InPutNode extends XMLNode{
         return this.childNodes;
     }
 
-    public boolean isAnAttribute(){
-        return this.name.startsWith(ATTRIBUTES_INITIALS);
-    }
-
-
 }

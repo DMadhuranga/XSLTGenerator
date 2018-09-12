@@ -21,6 +21,7 @@ import java.util.HashMap;
 
 import org.w3c.dom.Node;
 
+import static gen.config.XSLTGeneratorConstants.ATTRIBUTES_INITIALS;
 import static gen.config.XSLTGeneratorConstants.PROPERTIES_LOWER_CASE;
 import static gen.config.XSLTGeneratorConstants.KEY;
 import static gen.config.XSLTGeneratorConstants.VALUE;
@@ -93,5 +94,8 @@ public class OutPutNode extends XMLNode{
         return this.childNodes;
     }
 
+    public boolean isAnAttribute(){
+        return this.name.startsWith(ATTRIBUTES_INITIALS);
+    }
 
 }

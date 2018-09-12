@@ -104,6 +104,7 @@ import static gen.config.XSLTGeneratorConstants.VERSION;
 import static gen.config.XSLTGeneratorConstants.XMLNS_OWN;
 import static gen.config.XSLTGeneratorConstants.XMLNS_XS;
 import static gen.config.XSLTGeneratorConstants.XMLNS_XSL;
+import static gen.config.XSLTGeneratorConstants.XSL_ATTRIBUTE;
 import static gen.config.XSLTGeneratorConstants.XSLT_COMMENT;
 import static gen.config.XSLTGeneratorConstants.XSLT_FUNCTION_DECLARE_URI;
 import static gen.config.XSLTGeneratorConstants.XSLT_VERSION;
@@ -291,65 +292,77 @@ class XSLTCreator {
      */
     private void traverseOutPutNode(OutPutNode node, XSLTStyleSheetWriter outputXMLFile,
                                            Element parentElement) {
-        switch (node.getProperties().get(TYPE)) {
-            case STRING_TYPE:
-            case NUMBER_TYPE:
-            case BOOLEAN_TYPE:
-                if (!node.getInNode().getOutNodes().isEmpty()) {
-                    Element currentElement = outputXMLFile.getDocument().createElement(node
-                            .getName());
-                    parentElement.appendChild(currentElement);
-                    Element valueOfElement = outputXMLFile.getDocument().createElement
-                            (XSL_VALUE_OF);
-                    currentElement.appendChild(valueOfElement);
-                    valueOfElement.setAttribute(SELECT, getValueFromMapping(node.getInNode()
-                            .getOutNodes().get(0)));
-                }
-                break;
-            case ARRAY_TYPE:
-                InPutNode previousCurrentNode = currentInNode;
-                InPutNode inNode = traverseArray(node, operatorNodes);
-                if (inNode != null) {
-                    String arrayPath = getArrayPath(inNode);
-                    if (!arrayPath.equals(EMPTY_STRING)) {
-                        Element forEachElement = outputXMLFile.getDocument().createElement
-                                (XSL_FOR_EACH);
-                        forEachElement.setAttribute(SELECT, arrayPath);
-                        parentElement.appendChild(forEachElement);
+        if(node.isAnAttribute()){
+            Element attributeElement = outputXMLFile.getDocument().createElement(XSL_ATTRIBUTE);
+            attributeElement.setAttribute(NAME,node.getName().substring(1));
+            parentElement.appendChild(attributeElement);
+            Element valueOfElement = outputXMLFile.getDocument().createElement
+                    (XSL_VALUE_OF);
+            attributeElement.appendChild(valueOfElement);
+            valueOfElement.setAttribute(SELECT, getValueFromMapping(node.getInNode()
+                    .getOutNodes().get(0)));
+        }else {
+            switch (node.getProperties().get(TYPE)) {
+                case STRING_TYPE:
+                case NUMBER_TYPE:
+                case BOOLEAN_TYPE:
+                    if (!node.getInNode().getOutNodes().isEmpty()) {
                         Element currentElement = outputXMLFile.getDocument().createElement(node
                                 .getName());
-                        forEachElement.appendChild(currentElement);
-                        if (node.getProperty(ITEMS_TYPE).equals(OBJECT_TYPE)) {
-                            for (OutPutNode childNode : node.getChildNodes()) {
-                                traverseOutPutNode(childNode, outputXMLFile, currentElement);
-                            }
-                        } else if (node.getInNode().getOutNodes().size() > 0) {
-                            Element valueOfElement = outputXMLFile.getDocument().createElement
-                                    (XSL_VALUE_OF);
-                            currentElement.appendChild(valueOfElement);
-                            valueOfElement.setAttribute(SELECT,
-                                    getValueFromMapping(node.getInNode().getOutNodes().get(0)));
-                        }
+                        parentElement.appendChild(currentElement);
+                        Element valueOfElement = outputXMLFile.getDocument().createElement
+                                (XSL_VALUE_OF);
+                        currentElement.appendChild(valueOfElement);
+                        valueOfElement.setAttribute(SELECT, getValueFromMapping(node.getInNode()
+                                .getOutNodes().get(0)));
                     }
-                } else if (!node.getInNode().getOutNodes().isEmpty()) {
-                    Element currentElement = outputXMLFile.getDocument().createElement(node
-                            .getName());
+                    break;
+                case ARRAY_TYPE:
+                    InPutNode previousCurrentNode = currentInNode;
+                    InPutNode inNode = traverseArray(node, operatorNodes);
+                    if (inNode != null) {
+                        String arrayPath = getArrayPath(inNode);
+                        if (!arrayPath.equals(EMPTY_STRING)) {
+                            Element forEachElement = outputXMLFile.getDocument().createElement
+                                    (XSL_FOR_EACH);
+                            forEachElement.setAttribute(SELECT, arrayPath);
+                            parentElement.appendChild(forEachElement);
+                            Element currentElement = outputXMLFile.getDocument().createElement(node
+                                    .getName());
+                            forEachElement.appendChild(currentElement);
+                            if (node.getProperty(ITEMS_TYPE).equals(OBJECT_TYPE)) {
+                                for (OutPutNode childNode : node.getChildNodes()) {
+                                    traverseOutPutNode(childNode, outputXMLFile, currentElement);
+                                }
+                            } else if (node.getInNode().getOutNodes().size() > 0) {
+                                Element valueOfElement = outputXMLFile.getDocument().createElement
+                                        (XSL_VALUE_OF);
+                                currentElement.appendChild(valueOfElement);
+                                valueOfElement.setAttribute(SELECT,
+                                        getValueFromMapping(node.getInNode().getOutNodes().get(0)));
+                            }
+                        }
+                    } else if (!node.getInNode().getOutNodes().isEmpty()) {
+                        Element currentElement = outputXMLFile.getDocument().createElement(node
+                                .getName());
+                        parentElement.appendChild(currentElement);
+                        Element valueOfElement = outputXMLFile.getDocument().createElement
+                                (XSL_VALUE_OF);
+                        currentElement.appendChild(valueOfElement);
+                        valueOfElement.setAttribute(SELECT,
+                                getValueFromMapping(node.getInNode().getOutNodes().get(0)));
+                    }
+                    currentInNode = previousCurrentNode;
+                    break;
+                default:
+                    Element currentElement = outputXMLFile.getDocument().createElement(node.getName());
+
                     parentElement.appendChild(currentElement);
-                    Element valueOfElement = outputXMLFile.getDocument().createElement
-                            (XSL_VALUE_OF);
-                    currentElement.appendChild(valueOfElement);
-                    valueOfElement.setAttribute(SELECT,
-                            getValueFromMapping(node.getInNode().getOutNodes().get(0)));
-                }
-                currentInNode = previousCurrentNode;
-                break;
-            default:
-                Element currentElement = outputXMLFile.getDocument().createElement(node.getName());
-                parentElement.appendChild(currentElement);
-                for (OutPutNode childNode : node.getChildNodes()) {
-                    traverseOutPutNode(childNode, outputXMLFile, currentElement);
-                }
-                break;
+                    for (OutPutNode childNode : node.getChildNodes()) {
+                        traverseOutPutNode(childNode, outputXMLFile, currentElement);
+                    }
+                    break;
+            }
         }
     }
 
