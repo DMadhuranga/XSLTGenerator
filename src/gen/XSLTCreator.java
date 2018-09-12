@@ -54,6 +54,7 @@ import static gen.config.XSLTGeneratorConstants.EMPTY_STRING;
 import static gen.config.XSLTGeneratorConstants.ENDS_WITH;
 import static gen.config.XSLTGeneratorConstants.EXTENSION_ELEMENT_PREFIXES;
 import static gen.config.XSLTGeneratorConstants.EXTENSION_ELEMENT_PREFIXES_VALUES;
+import static gen.config.XSLTGeneratorConstants.EXTENSION_ELEMENT_PREFIXES_VALUES_WITHOUT_PROPERTY;
 import static gen.config.XSLTGeneratorConstants.FLOOR;
 import static gen.config.XSLTGeneratorConstants.FUNCTION_DEFINITION;
 import static gen.config.XSLTGeneratorConstants.GLOBAL_VARIABLE;
@@ -122,18 +123,11 @@ import static gen.config.XSLTGeneratorConstants.XS_NAMESPACE_URI;
  */
 class XSLTCreator {
 
-    private static ArrayList<InPutNode> inPutNodes;
-    private static ArrayList<OutPutNode> outPutNodes;
-    private static InPutNode currentInNode;
-    private static ArrayList<OperatorNode> operatorNodes;
-    private static ArrayList<String> globalVariables;
-
-    public static void main(String[] args) throws SAXException, IOException,
-            ParserConfigurationException,
-            TransformerException {
-        generateStyleSheet("/home/danushka/Downloads/output.xml",
-                "/home/danushka/workspace/SampleFlowRegistry/NewConfig12.datamapper");
-    }
+    private ArrayList<InPutNode> inPutNodes;
+    private ArrayList<OutPutNode> outPutNodes;
+    private InPutNode currentInNode;
+    private ArrayList<OperatorNode> operatorNodes;
+    private ArrayList<String> globalVariables;
 
     /**
      * This method will build the data trees and generate the XSLTStyleSheet
@@ -141,7 +135,7 @@ class XSLTCreator {
      * @param styleSheetFilePath path of the file that needed to save the generated stylesheet
      * @param schemaFilePath     path of the datamapper schema file
      */
-    private static void generateStyleSheet(String styleSheetFilePath, String schemaFilePath)
+    public void generateStyleSheet(String styleSheetFilePath, String schemaFilePath)
             throws SAXException, IOException, ParserConfigurationException, TransformerException {
         DataMapperSchemaProcessor inputXML = new DataMapperSchemaProcessor(schemaFilePath);
         XSLTStyleSheetWriter outputXML = new XSLTStyleSheetWriter(styleSheetFilePath);
@@ -168,7 +162,7 @@ class XSLTCreator {
      * @param rootElement first element of the output XML file
      * @param outputXML   writeXML file responsible for writing the output file
      */
-    private static void setPrecisionFunction(Element rootElement, XSLTStyleSheetWriter outputXML) {
+    private void setPrecisionFunction(Element rootElement, XSLTStyleSheetWriter outputXML) {
         Element setPrecisionFunction = outputXML.getDocument().createElement(XSL_FUNCTION);
         setPrecisionFunction.setAttribute(NAME, OWN_SET_PRECISION);
         Element resultString = outputXML.getDocument().createElement(XSL_PARAM);
@@ -198,7 +192,7 @@ class XSLTCreator {
      *
      * @param inputXMLFile    data mapper file that need to be traversed
      */
-    private static void createOutputNode(DataMapperSchemaProcessor inputXMLFile) {
+    private void createOutputNode(DataMapperSchemaProcessor inputXMLFile) {
         outPutNodes = new ArrayList<>();
         Node outputNode = inputXMLFile.getDocument().getElementsByTagName(OUTPUT).item(0);
         for (int i = 0; i < outputNode.getChildNodes().getLength(); i++) {
@@ -213,7 +207,7 @@ class XSLTCreator {
      *
      * @param inputXMLFile data mapper file that need to be traversed
      */
-    private static void createInputNode(DataMapperSchemaProcessor inputXMLFile) {
+    private void createInputNode(DataMapperSchemaProcessor inputXMLFile) {
         inPutNodes = new ArrayList<>();
         Node inputNode = inputXMLFile.getDocument().getElementsByTagName(INPUT).item(0);
         for (int i = 0; i < inputNode.getChildNodes().getLength(); i++) {
@@ -229,7 +223,7 @@ class XSLTCreator {
      *
      * @param inputXMLFile data mapper file that need to be traversed
      */
-    private static void createOperatorNodes(DataMapperSchemaProcessor inputXMLFile) {
+    private void createOperatorNodes(DataMapperSchemaProcessor inputXMLFile) {
         operatorNodes = new ArrayList<>();
         globalVariables = new ArrayList<>();
         NodeList operators = inputXMLFile.getDocument().getElementsByTagName("operators");
@@ -238,7 +232,7 @@ class XSLTCreator {
         }
     }
 
-    private static void setPropertyOperators(XSLTStyleSheetWriter outputXMLFile, Element
+    private void setPropertyOperators(XSLTStyleSheetWriter outputXMLFile, Element
             templateElement){
         String propertyOperatorString = EMPTY_STRING;
         for (OperatorNode operatorNode : operatorNodes) {
@@ -279,7 +273,13 @@ class XSLTCreator {
 
             }
         }
-        templateElement.setAttribute(RUN_TIME_PROPERTIES,propertyOperatorString);
+        if(EMPTY_STRING.equals(propertyOperatorString)){
+            templateElement.setAttribute(EXTENSION_ELEMENT_PREFIXES,
+                    EXTENSION_ELEMENT_PREFIXES_VALUES_WITHOUT_PROPERTY);
+        }else{
+            templateElement.setAttribute(EXTENSION_ELEMENT_PREFIXES, EXTENSION_ELEMENT_PREFIXES_VALUES);
+            templateElement.setAttribute(RUN_TIME_PROPERTIES,propertyOperatorString);
+        }
     }
 
     /**
@@ -289,7 +289,7 @@ class XSLTCreator {
      * @param outputXMLFile writeXML file responsible for writing the output file
      * @param parentElement writeXML file responsible for writing the output file
      */
-    private static void traverseOutPutNode(OutPutNode node, XSLTStyleSheetWriter outputXMLFile,
+    private void traverseOutPutNode(OutPutNode node, XSLTStyleSheetWriter outputXMLFile,
                                            Element parentElement) {
         switch (node.getProperties().get(TYPE)) {
             case STRING_TYPE:
@@ -359,7 +359,7 @@ class XSLTCreator {
      * @param node input node whose xPath is needed
      * @return path of the array element
      */
-    private static String getArrayPath(InPutNode node) {
+    private String getArrayPath(InPutNode node) {
         if (currentInNode == null) {
             InPutNode tempNode = node;
             while (tempNode.getParentNode() != null) {
@@ -404,7 +404,7 @@ class XSLTCreator {
      * @param inNode first element of the output XML file
      * @return the name of the previous element if the element was an array element, null otherwise
      */
-    private static String getValueFromMapping(String inNode) throws IndexOutOfBoundsException {
+    private String getValueFromMapping(String inNode) throws IndexOutOfBoundsException {
         if (isOperator(inNode)) {
             String index = inNode.split(DOT_SYMBOL)[1].split(SLASH)[0];
             OperatorNode operatorNode = operatorNodes.get(Integer.parseInt(index));
@@ -934,7 +934,7 @@ class XSLTCreator {
      * @param inNode inNode that needed to be tested
      * @return return the result of the test
      */
-    private static boolean isOperator(String inNode) {
+    private boolean isOperator(String inNode) {
         return inNode.startsWith(AT_OPERATORS);
     }
 
@@ -946,7 +946,7 @@ class XSLTCreator {
      * @param operatorNodes operators array
      * @return input node that maps to the given output node
      */
-    private static InPutNode traverseArray(OutPutNode node, ArrayList<OperatorNode> operatorNodes) {
+    private InPutNode traverseArray(OutPutNode node, ArrayList<OperatorNode> operatorNodes) {
         ArrayList<InPutNode> arrayNodes = new ArrayList<>();
         if (node.getProperty(TYPE).equals(ARRAY_TYPE)) {
             if (node.getProperty(ITEMS_TYPE).equals(OBJECT_TYPE)) {
@@ -979,7 +979,7 @@ class XSLTCreator {
      * @param operatorNodes operators array
      * @return array type node matches the given xPath
      */
-    private static InPutNode getArrayElement(String inNode, ArrayList<OperatorNode> operatorNodes) {
+    private InPutNode getArrayElement(String inNode, ArrayList<OperatorNode> operatorNodes) {
         if (isOperator(inNode)) {
             OperatorNode operatorNode = operatorNodes.get(Integer.parseInt(inNode.split
                     (DOT_SYMBOL)[1].split(SLASH)[0]));
@@ -1020,7 +1020,7 @@ class XSLTCreator {
      * @param arrayNodes array type input nodes
      * @return the array type node in highest level
      */
-    private static InPutNode getHighestLevelNode(ArrayList<InPutNode> arrayNodes) {
+    private InPutNode getHighestLevelNode(ArrayList<InPutNode> arrayNodes) {
         int maxArray = 0;
         for (int i = 0; i < arrayNodes.size(); i++) {
             if (arrayNodes.get(i).getLevel() > arrayNodes.get(maxArray).getLevel()) {
@@ -1040,7 +1040,7 @@ class XSLTCreator {
      * @param removedIdx index of the element
      * @return return new array
      */
-    private static String[] removeElementAt(String[] array, int removedIdx) {
+    private String[] removeElementAt(String[] array, int removedIdx) {
         String[] newArray = new String[array.length - 1];
         for (int i = 0; i < array.length; i++) {
             if (i < removedIdx) {
@@ -1057,12 +1057,11 @@ class XSLTCreator {
      *
      * @param rootElement root element of the output XSLT stylesheet
      */
-    private static void setXSLURIs(Element rootElement){
+    private void setXSLURIs(Element rootElement){
         rootElement.setAttribute(XMLNS_XSL, XSL_NAMESPACE_URI);
         rootElement.setAttribute(XMLNS_XS, XS_NAMESPACE_URI);
         rootElement.setAttribute(VERSION, XSLT_VERSION);
         rootElement.setAttribute(XMLNS_OWN, XSLT_FUNCTION_DECLARE_URI);
-        rootElement.setAttribute(EXTENSION_ELEMENT_PREFIXES, EXTENSION_ELEMENT_PREFIXES_VALUES);
     }
 
 }

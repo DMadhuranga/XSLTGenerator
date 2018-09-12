@@ -79,6 +79,7 @@ public final class XSLTGeneratorConstants {
     //node types
     public static final String AT_NODE = "/@node";
     public static final String AT_OPERATORS = "//@operators";
+    public static final String ATTRIBUTES_INITIALS = "@";
 
     public static final String INCOMING_LINK = "incomingLink";
     public static final String OUT_NODE= "outNode";
@@ -119,5 +120,6 @@ public final class XSLTGeneratorConstants {
     public static final String RUN_TIME_PROPERTIES = "xmlns:runTimeProperties";
     public static final String EXTENSION_ELEMENT_PREFIXES = "extension-element-prefixes";
     public static final String EXTENSION_ELEMENT_PREFIXES_VALUES = "xs own runTimeProperties";
+    public static final String EXTENSION_ELEMENT_PREFIXES_VALUES_WITHOUT_PROPERTY = "xs own";
 
 }
